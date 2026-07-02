@@ -1,10 +1,9 @@
-import dotenv from "dotenv";
+import "./config/env.js";
 import { connectDb } from "./config/db.js";
 import Blog from "./models/Blog.js";
 import Category from "./models/Category.js";
 import User from "./models/User.js";
 
-dotenv.config();
 await connectDb();
 
 let admin = await User.findOne({ role: "admin" });

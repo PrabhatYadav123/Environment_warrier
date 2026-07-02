@@ -1,8 +1,6 @@
-import dotenv from "dotenv";
+import "./config/env.js";
 import { connectDb } from "./config/db.js";
 import User from "./models/User.js";
-
-dotenv.config();
 
 function arg(name) {
   const prefix = `--${name}=`;

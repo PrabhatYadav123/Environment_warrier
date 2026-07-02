@@ -1,5 +1,5 @@
 import cors from "cors";
-import dotenv from "dotenv";
+import "./config/env.js";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -12,12 +12,11 @@ import blogRoutes from "./routes/blogRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 
-dotenv.config();
-
 const app = express();
-const port = process.env.PORT || 5000;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const port = process.env.PORT || 5000;
 
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
