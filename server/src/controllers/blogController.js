@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import slugify from "slugify";
 import Blog from "../models/Blog.js";
-import { toMedia } from "../utils/media.js";
+import { destroyMedia, resolveBlogMedia, toMedia } from "../utils/media.js";
 
 const populate = [
   { path: "author", select: "name profileImage" },
@@ -59,6 +59,21 @@ async function getBlogPayload(req) {
   return payload;
 }
 
+function isTrue(value) {
+  return value === true || value === "true";
+}
+
+function parseKeepGalleryImages(value) {
+  if (!value) return null;
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export const listBlogs = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 9;
@@ -73,7 +88,7 @@ export const listBlogs = asyncHandler(async (req, res) => {
     Blog.countDocuments(query)
   ]);
 
-  res.json({ items, total, page, pages: Math.ceil(total / limit) });
+  res.json({ items: items.map((blog) => resolveBlogMedia(blog, req)), total, page, pages: Math.ceil(total / limit) });
 });
 
 export const getBlog = asyncHandler(async (req, res) => {
@@ -88,7 +103,7 @@ export const getBlog = asyncHandler(async (req, res) => {
     await blog.save();
   }
 
-  res.json(blog);
+  res.json(resolveBlogMedia(blog, req));
 });
 
 export const getBlogById = asyncHandler(async (req, res) => {
@@ -97,7 +112,7 @@ export const getBlogById = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Blog not found");
   }
-  res.json(blog);
+  res.json(resolveBlogMedia(blog, req));
 });
 
 export const createBlog = asyncHandler(async (req, res) => {
@@ -105,7 +120,7 @@ export const createBlog = asyncHandler(async (req, res) => {
     ...(await getBlogPayload(req)),
     author: req.user._id
   });
-  res.status(201).json(await blog.populate(populate));
+  res.status(201).json(resolveBlogMedia(await blog.populate(populate), req));
 });
 
 export const updateBlog = asyncHandler(async (req, res) => {
@@ -115,9 +130,33 @@ export const updateBlog = asyncHandler(async (req, res) => {
     throw new Error("Blog not found");
   }
 
-  Object.assign(blog, await getBlogPayload(req));
+  const payload = await getBlogPayload(req);
+  const singleMediaFields = ["featuredImage", "video", "audio"];
+
+  for (const field of singleMediaFields) {
+    if (payload[field] || isTrue(req.body[`remove${field[0].toUpperCase()}${field.slice(1)}`])) {
+      await destroyMedia(blog[field]);
+    }
+  }
+
+  if (isTrue(req.body.removeFeaturedImage)) payload.featuredImage = undefined;
+  if (isTrue(req.body.removeVideo)) payload.video = undefined;
+  if (isTrue(req.body.removeAudio)) payload.audio = undefined;
+
+  const keepGalleryImages = parseKeepGalleryImages(req.body.keepGalleryImages);
+  if (keepGalleryImages) {
+    const keepKeys = new Set(keepGalleryImages.map((image) => image.publicId || image.url).filter(Boolean));
+    const existingGallery = blog.galleryImages || [];
+    const keptGallery = existingGallery.filter((image) => keepKeys.has(image.publicId || image.url));
+    const removedGallery = existingGallery.filter((image) => !keepKeys.has(image.publicId || image.url));
+
+    await Promise.all(removedGallery.map(destroyMedia));
+    payload.galleryImages = [...keptGallery, ...(payload.galleryImages || [])];
+  }
+
+  Object.assign(blog, payload);
   await blog.save();
-  res.json(await blog.populate(populate));
+  res.json(resolveBlogMedia(await blog.populate(populate), req));
 });
 
 export const deleteBlog = asyncHandler(async (req, res) => {
@@ -126,6 +165,13 @@ export const deleteBlog = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Blog not found");
   }
+
+  await Promise.all([
+    destroyMedia(blog.featuredImage),
+    ...(blog.galleryImages || []).map(destroyMedia),
+    destroyMedia(blog.video),
+    destroyMedia(blog.audio)
+  ]);
 
   await blog.deleteOne();
   res.json({ message: "Blog deleted" });

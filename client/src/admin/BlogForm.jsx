@@ -1,4 +1,4 @@
-import { Save } from "lucide-react";
+import { Image as ImageIcon, Music, Save, Trash2, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import RichTextEditor from "../components/RichTextEditor.jsx";
@@ -19,6 +19,7 @@ export default function BlogForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState(emptyForm);
   const [files, setFiles] = useState({});
+  const [media, setMedia] = useState({ featuredImage: null, galleryImages: [], video: null, audio: null });
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
 
@@ -34,6 +35,12 @@ export default function BlogForm() {
           tags: data.tags?.join(", ") || "",
           status: data.status || "draft",
           content: data.content || ""
+        });
+        setMedia({
+          featuredImage: data.featuredImage || null,
+          galleryImages: data.galleryImages || [],
+          video: data.video || null,
+          audio: data.audio || null
         });
       });
     }
@@ -52,6 +59,13 @@ export default function BlogForm() {
     if (files.video) data.append("video", files.video);
     if (files.audio) data.append("audio", files.audio);
     Array.from(files.galleryImages || []).forEach((file) => data.append("galleryImages", file));
+
+    if (id) {
+      data.append("keepGalleryImages", JSON.stringify(media.galleryImages));
+      if (!media.featuredImage && !files.featuredImage) data.append("removeFeaturedImage", "true");
+      if (!media.video && !files.video) data.append("removeVideo", "true");
+      if (!media.audio && !files.audio) data.append("removeAudio", "true");
+    }
 
     try {
       if (id) {
@@ -111,10 +125,48 @@ export default function BlogForm() {
           </label>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <FileField label="Featured Image" accept="image/*" onChange={(file) => setFiles((current) => ({ ...current, featuredImage: file }))} />
-          <FileField label="Gallery Images" accept="image/*" multiple onChange={(fileList) => setFiles((current) => ({ ...current, galleryImages: fileList }))} />
-          <FileField label="Video" accept="video/*" onChange={(file) => setFiles((current) => ({ ...current, video: file }))} />
-          <FileField label="Audio" accept="audio/*" onChange={(file) => setFiles((current) => ({ ...current, audio: file }))} />
+          <FileField
+            label="Featured Image"
+            accept="image/*"
+            selected={files.featuredImage?.name}
+            onChange={(file) => setFiles((current) => ({ ...current, featuredImage: file }))}
+          >
+            {media.featuredImage && (
+              <MediaPreview media={media.featuredImage} type="image" onRemove={() => setMedia((current) => ({ ...current, featuredImage: null }))} />
+            )}
+          </FileField>
+          <FileField
+            label="Gallery Images"
+            accept="image/*"
+            multiple
+            selected={files.galleryImages?.length ? `${files.galleryImages.length} new file(s)` : ""}
+            onChange={(fileList) => setFiles((current) => ({ ...current, galleryImages: fileList }))}
+          >
+            {media.galleryImages.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {media.galleryImages.map((image) => (
+                  <MediaPreview
+                    key={image.publicId || image.url}
+                    media={image}
+                    type="image"
+                    compact
+                    onRemove={() =>
+                      setMedia((current) => ({
+                        ...current,
+                        galleryImages: current.galleryImages.filter((item) => (item.publicId || item.url) !== (image.publicId || image.url))
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </FileField>
+          <FileField label="Video" accept="video/*" selected={files.video?.name} onChange={(file) => setFiles((current) => ({ ...current, video: file }))}>
+            {media.video && <MediaPreview media={media.video} type="video" onRemove={() => setMedia((current) => ({ ...current, video: null }))} />}
+          </FileField>
+          <FileField label="Audio" accept="audio/*" selected={files.audio?.name} onChange={(file) => setFiles((current) => ({ ...current, audio: file }))}>
+            {media.audio && <MediaPreview media={media.audio} type="audio" onRemove={() => setMedia((current) => ({ ...current, audio: null }))} />}
+          </FileField>
         </div>
         <label className="grid gap-2">
           <span className="label">Content</span>
@@ -129,10 +181,11 @@ export default function BlogForm() {
   );
 }
 
-function FileField({ label, accept, multiple, onChange }) {
+function FileField({ label, accept, multiple, selected, onChange, children }) {
   return (
-    <label className="grid gap-2">
+    <div className="grid gap-2">
       <span className="label">{label}</span>
+      {children}
       <input
         className="field"
         type="file"
@@ -140,6 +193,42 @@ function FileField({ label, accept, multiple, onChange }) {
         multiple={multiple}
         onChange={(event) => onChange(multiple ? event.target.files : event.target.files?.[0])}
       />
-    </label>
+      {selected && <p className="text-xs font-semibold text-forest">Selected: {selected}</p>}
+    </div>
+  );
+}
+
+function MediaPreview({ media, type, compact = false, onRemove }) {
+  const Icon = type === "video" ? Video : type === "audio" ? Music : ImageIcon;
+  const name = media.originalName || media.publicId || "Uploaded media";
+
+  return (
+    <div className="overflow-hidden rounded-md border border-ink/10 bg-mist">
+      {type === "image" && media.url ? (
+        <img src={media.url} alt={name} className={`${compact ? "h-28" : "h-44"} w-full object-cover`} />
+      ) : type === "video" && media.url ? (
+        <video src={media.url} controls className="h-44 w-full bg-black object-contain" />
+      ) : type === "audio" && media.url ? (
+        <div className="grid gap-3 p-3">
+          <div className="flex items-center gap-2 text-sm font-semibold text-ink/70">
+            <Music size={16} /> {name}
+          </div>
+          <audio src={media.url} controls className="w-full" />
+        </div>
+      ) : (
+        <div className="grid h-28 place-items-center text-ink/50">
+          <Icon size={24} />
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-3 p-2">
+        <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-ink/70">
+          <Icon size={14} className="shrink-0" />
+          <span className="truncate">{name}</span>
+        </div>
+        <button type="button" className="btn-secondary px-2 py-1 text-red-700" onClick={onRemove} aria-label={`Remove ${name}`}>
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </div>
   );
 }

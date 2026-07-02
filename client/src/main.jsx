@@ -11,6 +11,7 @@ import Dashboard from "./admin/Dashboard.jsx";
 import Login from "./admin/Login.jsx";
 import ManageBlogs from "./admin/ManageBlogs.jsx";
 import Profile from "./admin/Profile.jsx";
+import Users from "./admin/Users.jsx";
 import About from "./pages/About.jsx";
 import BlogDetail from "./pages/BlogDetail.jsx";
 import Blogs from "./pages/Blogs.jsx";
@@ -52,6 +53,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="blogs/new" element={<BlogForm />} />
             <Route path="blogs/:id/edit" element={<BlogForm />} />
             <Route path="categories" element={<Categories />} />
+            <Route path="users" element={<Users />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>

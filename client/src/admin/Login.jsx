@@ -6,8 +6,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("admin12345");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   async function submit(event) {
@@ -30,7 +30,7 @@ export default function Login() {
           </span>
           <div>
             <h1 className="text-2xl font-black">Admin Login</h1>
-            <p className="text-sm text-ink/60">Manage blogs and media.</p>
+            <p className="text-sm text-ink/60">Use your assigned admin account.</p>
           </div>
         </div>
         <label className="grid gap-2">

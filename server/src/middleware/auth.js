@@ -30,3 +30,12 @@ export function adminOnly(req, res, next) {
   res.status(403);
   throw new Error("Admin access required");
 }
+
+export function superAdminOnly(req, res, next) {
+  if (req.user?.role === "admin") {
+    return next();
+  }
+
+  res.status(403);
+  throw new Error("Admin role required");
+}

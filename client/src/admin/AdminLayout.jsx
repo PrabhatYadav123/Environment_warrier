@@ -1,4 +1,4 @@
-import { BarChart3, Folder, LogOut, Newspaper, PenSquare, User } from "lucide-react";
+import { BarChart3, Folder, LogOut, Newspaper, PenSquare, User, Users } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -7,6 +7,7 @@ const links = [
   ["Manage Blogs", "/admin/blogs", Newspaper],
   ["Create Blog", "/admin/blogs/new", PenSquare],
   ["Categories", "/admin/categories", Folder],
+  ["Users", "/admin/users", Users, "admin"],
   ["Profile", "/admin/profile", User]
 ];
 
@@ -27,7 +28,7 @@ export default function AdminLayout() {
         </Link>
         <p className="mt-1 text-sm text-ink/60">{user?.name}</p>
         <nav className="mt-8 grid gap-2">
-          {links.map(([label, href, Icon]) => (
+          {links.filter(([, , , role]) => !role || role === user?.role).map(([label, href, Icon]) => (
             <NavLink
               key={href}
               to={href}
@@ -57,7 +58,7 @@ export default function AdminLayout() {
             </button>
           </div>
           <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {links.map(([label, href]) => (
+            {links.filter(([, , , role]) => !role || role === user?.role).map(([label, href]) => (
               <NavLink key={href} to={href} end={href === "/admin"} className="btn-secondary whitespace-nowrap">
                 {label}
               </NavLink>

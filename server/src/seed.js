@@ -7,12 +7,12 @@ import User from "./models/User.js";
 dotenv.config();
 await connectDb();
 
-let admin = await User.findOne({ email: process.env.ADMIN_EMAIL || "admin@example.com" });
-if (!admin) {
+let admin = await User.findOne({ role: "admin" });
+if (!admin && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
   admin = await User.create({
     name: process.env.ADMIN_NAME || "Admin",
-    email: process.env.ADMIN_EMAIL || "admin@example.com",
-    password: process.env.ADMIN_PASSWORD || "admin12345",
+    email: process.env.ADMIN_EMAIL,
+    password: process.env.ADMIN_PASSWORD,
     role: "admin"
   });
 }
@@ -27,7 +27,7 @@ const categories = await Category.insertMany(
 ).catch(async () => Category.find());
 
 const existingBlogs = await Blog.countDocuments();
-if (existingBlogs === 0) {
+if (existingBlogs === 0 && admin) {
   await Blog.create([
     {
       title: "Simple Ways to Save Water at Home",
@@ -52,6 +52,10 @@ if (existingBlogs === 0) {
       status: "published"
     }
   ]);
+}
+
+if (!admin) {
+  console.warn("Seed finished without an admin user. Set ADMIN_EMAIL and ADMIN_PASSWORD once, then run npm run seed again.");
 }
 
 console.log("Seed completed");
