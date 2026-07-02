@@ -1,0 +1,160 @@
+import asyncHandler from "express-async-handler";
+import slugify from "slugify";
+import Blog from "../models/Blog.js";
+import { toMedia } from "../utils/media.js";
+
+const populate = [
+  { path: "author", select: "name profileImage" },
+  { path: "category", select: "name slug" }
+];
+
+function buildQuery(req, includeDrafts = false) {
+  const query = includeDrafts ? {} : { status: "published" };
+
+  if (req.query.search) {
+    query.$or = [
+      { title: { $regex: req.query.search, $options: "i" } },
+      { subtitle: { $regex: req.query.search, $options: "i" } },
+      { excerpt: { $regex: req.query.search, $options: "i" } },
+      { tags: { $regex: req.query.search, $options: "i" } }
+    ];
+  }
+
+  if (req.query.category) {
+    query.category = req.query.category;
+  }
+
+  if (req.query.status && includeDrafts) {
+    query.status = req.query.status;
+  }
+
+  return query;
+}
+
+async function getBlogPayload(req) {
+  const files = req.files || {};
+  const tags = typeof req.body.tags === "string"
+    ? req.body.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
+    : req.body.tags;
+
+  const payload = {
+    title: req.body.title,
+    subtitle: req.body.subtitle,
+    excerpt: req.body.excerpt,
+    content: req.body.content,
+    category: req.body.category || undefined,
+    tags,
+    status: req.body.status
+  };
+
+  if (req.body.title) {
+    payload.slug = slugify(req.body.title, { lower: true, strict: true });
+  }
+  if (files.featuredImage?.[0]) payload.featuredImage = await toMedia(files.featuredImage[0]);
+  if (files.galleryImages?.length) payload.galleryImages = await Promise.all(files.galleryImages.map(toMedia));
+  if (files.video?.[0]) payload.video = await toMedia(files.video[0]);
+  if (files.audio?.[0]) payload.audio = await toMedia(files.audio[0]);
+
+  Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
+  return payload;
+}
+
+export const listBlogs = asyncHandler(async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 9;
+  const query = buildQuery(req, req.query.includeDrafts === "true");
+
+  const [items, total] = await Promise.all([
+    Blog.find(query)
+      .populate(populate)
+      .sort(req.query.sort === "trending" ? { views: -1 } : { createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    Blog.countDocuments(query)
+  ]);
+
+  res.json({ items, total, page, pages: Math.ceil(total / limit) });
+});
+
+export const getBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findOne({ slug: req.params.slug }).populate(populate);
+  if (!blog || (blog.status !== "published" && !req.user)) {
+    res.status(404);
+    throw new Error("Blog not found");
+  }
+
+  if (blog.status === "published") {
+    blog.views += 1;
+    await blog.save();
+  }
+
+  res.json(blog);
+});
+
+export const getBlogById = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id).populate(populate);
+  if (!blog) {
+    res.status(404);
+    throw new Error("Blog not found");
+  }
+  res.json(blog);
+});
+
+export const createBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.create({
+    ...(await getBlogPayload(req)),
+    author: req.user._id
+  });
+  res.status(201).json(await blog.populate(populate));
+});
+
+export const updateBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  if (!blog) {
+    res.status(404);
+    throw new Error("Blog not found");
+  }
+
+  Object.assign(blog, await getBlogPayload(req));
+  await blog.save();
+  res.json(await blog.populate(populate));
+});
+
+export const deleteBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  if (!blog) {
+    res.status(404);
+    throw new Error("Blog not found");
+  }
+
+  await blog.deleteOne();
+  res.json({ message: "Blog deleted" });
+});
+
+export const likeBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  if (!blog) {
+    res.status(404);
+    throw new Error("Blog not found");
+  }
+  blog.likes += 1;
+  await blog.save();
+  res.json({ likes: blog.likes });
+});
+
+export const analytics = asyncHandler(async (_req, res) => {
+  const [totalBlogs, publishedBlogs, draftBlogs, viewsAgg] = await Promise.all([
+    Blog.countDocuments(),
+    Blog.countDocuments({ status: "published" }),
+    Blog.countDocuments({ status: "draft" }),
+    Blog.aggregate([{ $group: { _id: null, views: { $sum: "$views" }, likes: { $sum: "$likes" } } }])
+  ]);
+
+  res.json({
+    totalBlogs,
+    publishedBlogs,
+    draftBlogs,
+    totalViews: viewsAgg[0]?.views ?? 0,
+    totalLikes: viewsAgg[0]?.likes ?? 0
+  });
+});
