@@ -25,7 +25,7 @@ export default function Home() {
         <meta property="og:title" content="Environment Warrior | Climate Stories & Community Action" />
         <meta property="og:description" content="Read climate stories, conservation guides and community action updates from Environment Warrior Group." />
         <meta property="og:url" content="https://environment-warrior.vercel.app/" />
-        <meta property="og:image" content="https://environment-warrior.vercel.app/og-image.jpg" />
+        <meta property="og:image" content="https://cdn.uploadtourl.com/30e30efd-6fc1-4563-b5db-0aff9025742e_Environment.png" />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
