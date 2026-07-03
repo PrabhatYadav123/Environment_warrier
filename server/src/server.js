@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import sitemapRoute from "./routes/sitemapRoute.js"; // ← Add
 
 const app = express();
 
@@ -30,6 +31,9 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "environment-warrior-api" });
 });
 
+// Sitemap ← Add before other routes
+app.use("/", sitemapRoute);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -44,4 +48,4 @@ connectDb()
   .catch((error) => {
     console.error(error);
     process.exit(1);
-  });
+  }); 
