@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async"; // ← Add
 import BlogCard from "../components/BlogCard.jsx";
 import BlogFilters from "../components/BlogFilters.jsx";
 import api from "../services/api";
@@ -27,6 +28,30 @@ export default function Blogs() {
 
   return (
     <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10">
+
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>Blogs | Environment Warrior — Climate Stories & Resources</title>
+        <meta name="description" content="Read the latest blogs on climate change, conservation, community action and sustainability from Environment Warrior Group." />
+        <meta name="keywords" content="environment blogs, climate change articles, conservation stories, sustainability India, green community" />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Blogs | Environment Warrior — Climate Stories & Resources" />
+        <meta property="og:description" content="Read the latest blogs on climate change, conservation, community action and sustainability." />
+        <meta property="og:url" content="https://environment-warrior.vercel.app/blogs" />
+        <meta property="og:image" content="https://environment-warrior.vercel.app/og-image.jpg" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Blogs | Environment Warrior — Climate Stories & Resources" />
+        <meta name="twitter:description" content="Read the latest blogs on climate change, conservation, community action and sustainability." />
+        <meta name="twitter:image" content="https://environment-warrior.vercel.app/og-image.jpg" />
+
+        {/* Canonical — page change hone pe bhi sahi URL rahega */}
+        <link rel="canonical" href="https://environment-warrior.vercel.app/blogs" />
+      </Helmet>
+
       <div>
         <p className="text-sm font-bold uppercase tracking-wide text-forest">
           Blogs

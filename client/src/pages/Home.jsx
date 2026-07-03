@@ -1,6 +1,7 @@
 import { ArrowRight, Newspaper, Sprout, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async"; // ← Add
 import BlogCard from "../components/BlogCard.jsx";
 import api from "../services/api";
 
@@ -13,6 +14,29 @@ export default function Home() {
 
   return (
     <>
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>Environment Warrior | Climate Stories, Campaigns & Community Action</title>
+        <meta name="description" content="Environment Warrior Group publishes blogs, photos, videos and audio updates on climate change, conservation, and community action for a cleaner planet." />
+        <meta name="keywords" content="environment, climate change, conservation, community action, green planet, sustainability, environmental blogs India" />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Environment Warrior | Climate Stories & Community Action" />
+        <meta property="og:description" content="Read climate stories, conservation guides and community action updates from Environment Warrior Group." />
+        <meta property="og:url" content="https://environment-warrior.vercel.app/" />
+        <meta property="og:image" content="https://environment-warrior.vercel.app/og-image.jpg" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Environment Warrior | Climate Stories & Community Action" />
+        <meta name="twitter:description" content="Read climate stories, conservation guides and community action updates from Environment Warrior Group." />
+        <meta name="twitter:image" content="https://environment-warrior.vercel.app/og-image.jpg" />
+
+        {/* Canonical */}
+        <link rel="canonical" href="https://environment-warrior.vercel.app/" />
+      </Helmet>
+
       <section className="bg-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div className="grid gap-6">
