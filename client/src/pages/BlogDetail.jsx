@@ -168,9 +168,7 @@ export default function BlogDetail() {
           <div className="flex flex-wrap gap-3 text-sm text-ink/60">
             <span>{formatDate(blog.createdAt)}</span>
             <span>{blog.readingTime} min read</span>
-            {blog.author?.name && (
-  <span>By {blog.author.name}</span>
-)}
+            {blog.author?.name && <span>By {blog.author.name}</span>}
             <span>{blog.views} views</span>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -184,13 +182,13 @@ export default function BlogDetail() {
         </div>
       </div>
       {blog.featuredImage?.url && (
-       <img
-  src={blog.featuredImage.url}
-  alt={`${blog.title} - Environment Warrior`}
-  loading="eager"
-  decoding="async"
-  className="h-[420px] w-full object-cover px-8 rounded-xl"
-/>
+        <img
+          src={blog.featuredImage.url}
+          alt={`${blog.title} - Environment Warrior`}
+          loading="eager"
+          decoding="async"
+          className="h-[420px] w-full object-cover px-8 rounded-xl"
+        />
       )}
       <div className="mx-auto grid max-w-4xl gap-8 px-4 py-10">
         <div
@@ -198,28 +196,28 @@ export default function BlogDetail() {
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
         {blog.tags?.length > 0 && (
-  <div className="flex flex-wrap gap-2">
-    {blog.tags.map((tag) => (
-      <span
-        key={tag}
-        className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
-      >
-        #{tag}
-      </span>
-    ))}
-  </div>
-)}
+          <div className="flex flex-wrap gap-2">
+            {blog.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
         {blog.galleryImages?.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2">
             {blog.galleryImages.map((image) => (
               <img
-  key={image.url}
-  src={image.url}
-  alt={`${blog.title} image`}
-  loading="lazy"
-  decoding="async"
-  className="rounded-md object-cover"
-/>
+                key={image.url}
+                src={image.url}
+                alt={`${blog.title} image`}
+                loading="lazy"
+                decoding="async"
+                className="rounded-md object-cover"
+              />
             ))}
           </div>
         )}
