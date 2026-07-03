@@ -1,6 +1,7 @@
 import { Heart, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async"; // ← Add
 import api from "../services/api";
 import { formatDate, shareBlog } from "../utils/format";
 
@@ -26,6 +27,34 @@ export default function BlogDetail() {
 
   return (
     <article className="bg-white">
+
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>{blog.title} | Environment Warrior</title>
+        <meta name="description" content={blog.subtitle || blog.excerpt || blog.title} />
+        <meta name="keywords" content={`environment, ${blog.category?.name || ""}, ${blog.title}`} />
+
+        {/* Open Graph (Facebook, WhatsApp, LinkedIn) */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={blog.title} />
+        <meta property="og:description" content={blog.subtitle || blog.excerpt || blog.title} />
+        <meta property="og:url" content={`https://environment-warrior.vercel.app/blog/${slug}`} />
+        {blog.featuredImage?.url && <meta property="og:image" content={blog.featuredImage.url} />}
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={blog.title} />
+        <meta name="twitter:description" content={blog.subtitle || blog.excerpt || blog.title} />
+        {blog.featuredImage?.url && <meta name="twitter:image" content={blog.featuredImage.url} />}
+
+        {/* Article specific */}
+        <meta property="article:published_time" content={blog.createdAt} />
+        <meta property="article:section" content={blog.category?.name || "Environment"} />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href={`https://environment-warrior.vercel.app/blog/${slug}`} />
+      </Helmet>
+
       <div className="mx-auto max-w-4xl px-4 py-10">
         <Link to="/blogs" className="text-sm font-bold text-forest">
           Back to blogs

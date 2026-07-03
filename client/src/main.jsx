@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async"; // ← Add
 import "./styles.css";
 import App from "./App.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -27,37 +28,39 @@ function ProtectedRoute({ children }) {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route element={<App />}>
-            <Route index element={<Home />} />
-            <Route path="about" element={<About />} />
-            <Route path="blogs" element={<Blogs />} />
-            <Route path="blog/:slug" element={<BlogDetail />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="videos" element={<Videos />} />
-            <Route path="contact" element={<Contact />} />
-          </Route>
-          <Route path="/admin/login" element={<Login />} />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="blogs" element={<ManageBlogs />} />
-            <Route path="blogs/new" element={<BlogForm />} />
-            <Route path="blogs/:id/edit" element={<BlogForm />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="users" element={<Users />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+    <HelmetProvider> {/* ← Wrap karo */}
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            <Route element={<App />}>
+              <Route index element={<Home />} />
+              <Route path="about" element={<About />} />
+              <Route path="blogs" element={<Blogs />} />
+              <Route path="blog/:slug" element={<BlogDetail />} />
+              <Route path="gallery" element={<Gallery />} />
+              <Route path="videos" element={<Videos />} />
+              <Route path="contact" element={<Contact />} />
+            </Route>
+            <Route path="/admin/login" element={<Login />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="blogs" element={<ManageBlogs />} />
+              <Route path="blogs/new" element={<BlogForm />} />
+              <Route path="blogs/:id/edit" element={<BlogForm />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="users" element={<Users />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </HelmetProvider> {/* ← Close karo */}
   </React.StrictMode>
 );
