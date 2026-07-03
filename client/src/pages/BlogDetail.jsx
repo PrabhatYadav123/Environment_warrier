@@ -49,7 +49,7 @@ export default function BlogDetail() {
           </div>
         </div>
       </div>
-      {blog.featuredImage?.url && <img src={blog.featuredImage.url} alt={blog.title} className="h-[420px] w-full object-cover" />}
+      {blog.featuredImage?.url && <img src={blog.featuredImage.url} alt={blog.title} className="h-[420px] w-full object-cover px-8 rounded-xl" />}
       <div className="mx-auto grid max-w-4xl gap-8 px-4 py-10">
         <div className="prose max-w-none prose-headings:text-ink prose-a:text-forest" dangerouslySetInnerHTML={{ __html: blog.content }} />
         {blog.galleryImages?.length > 0 && (

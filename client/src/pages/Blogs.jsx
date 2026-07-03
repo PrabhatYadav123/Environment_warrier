@@ -28,7 +28,9 @@ export default function Blogs() {
   return (
     <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10">
       <div>
-        <p className="text-sm font-bold uppercase tracking-wide text-forest">Blogs</p>
+        <p className="text-sm font-bold uppercase tracking-wide text-forest">
+          Blogs
+        </p>
         <h1 className="text-4xl font-black">Stories and Resources</h1>
       </div>
       <BlogFilters
@@ -49,18 +51,30 @@ export default function Blogs() {
           <BlogCard key={blog._id} blog={blog} />
         ))}
       </div>
-      {blogs.length === 0 && <p className="rounded-md bg-white p-6 text-ink/60">No blogs found.</p>}
-      <div className="flex items-center justify-center gap-3">
-        <button className="btn-secondary" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
-          Previous
-        </button>
-        <span className="text-sm font-semibold">
-          Page {page} of {pages}
-        </span>
-        <button className="btn-secondary" disabled={page >= pages} onClick={() => setPage((value) => value + 1)}>
-          Next
-        </button>
-      </div>
+      {blogs.length === 0 && (
+        <p className="rounded-md bg-white p-6 text-ink/60">No blogs found.</p>
+      )}
+      {blogs.length >= 6 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            className="btn-secondary cursor-pointer"
+            disabled={page <= 1}
+            onClick={() => setPage((value) => value - 1)}
+          >
+            Previous
+          </button>
+          <span className="text-sm font-semibold">
+            Page {page} of {pages}
+          </span>
+          <button
+            className="btn-secondary cursor-pointer"
+            disabled={page >= pages}
+            onClick={() => setPage((value) => value + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </section>
   );
 }
