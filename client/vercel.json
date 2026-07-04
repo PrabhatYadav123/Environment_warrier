@@ -1,13 +1,16 @@
 {
-  "rewrites": [
+  "headers": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://environment-warrier.onrender.com/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
