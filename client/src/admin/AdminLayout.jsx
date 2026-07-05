@@ -9,7 +9,13 @@ const links = [
   { label: "Create Blog",  href: "/admin/blogs/new",  icon: PenSquare, role: null,    end: true  },
   { label: "Categories",   href: "/admin/categories", icon: Folder,    role: null,    end: false },
   { label: "Contacts",     href: "/admin/contacts",   icon: Mail,      role: null,    end: false },
-  { label: "Users",        href: "/admin/users",      icon: Users,     role: "admin", end: false },
+  {
+    label: "Users",
+    href: "/admin/users",
+    icon: Users,
+    roles: ["admin", "super_admin"],
+    end: false,
+  },
   { label: "Profile",      href: "/admin/profile",    icon: User,      role: null,    end: false },
 ];
 
