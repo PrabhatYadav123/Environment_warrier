@@ -22,20 +22,37 @@ export const protect = asyncHandler(async (req, res, next) => {
   next();
 });
 
-export function adminOnly(req, res, next) {
-  if (req.user?.role === "admin" || req.user?.role === "author") {
-    return next();
-  }
+export function authorOrAbove(req,res,next){
 
-  res.status(403);
-  throw new Error("Admin access required");
+    if(
+        req.user.role==="author" ||
+        req.user.role==="admin" ||
+        req.user.role==="super_admin"
+    ){
+        return next();
+    }
+
+    res.status(403);
+    throw new Error("Unauthorized");
 }
 
-export function superAdminOnly(req, res, next) {
-  if (req.user?.role === "admin") {
-    return next();
-  }
+export function adminOnly(req,res,next){
 
-  res.status(403);
-  throw new Error("Admin role required");
+    if(
+        req.user.role==="admin" ||
+        req.user.role==="super_admin"
+    ){
+        return next();
+    }
+
+    res.status(403);
+    throw new Error("Admin only");
+}
+export function superAdminOnly(req,res,next){
+
+    if(req.user.role==="super_admin")
+        return next();
+
+    res.status(403);
+    throw new Error("Super Admin only");
 }

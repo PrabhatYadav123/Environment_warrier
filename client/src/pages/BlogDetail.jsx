@@ -187,7 +187,7 @@ export default function BlogDetail() {
           alt={`${blog.title} - Environment Warrior`}
           loading="eager"
           decoding="async"
-          className="h-[420px] w-full object-cover px-8 rounded-xl"
+          className="h-[420px] w-full object-contain px-8 rounded-xl"
         />
       )}
       <div className="mx-auto grid max-w-4xl gap-8 px-4 py-10">

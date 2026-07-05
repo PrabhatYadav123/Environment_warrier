@@ -45,9 +45,12 @@ export const updateProfile = asyncHandler(async (req, res) => {
   sendAuth(res, user);
 });
 
-export const listUsers = asyncHandler(async (_req, res) => {
+export const listUsers = asyncHandler(async (req, res) => {
   const users = await User.find().select("-password").sort({ createdAt: -1 });
-  res.json(users);
+ res.json({
+  currentUser: req.user,
+  users
+});
 });
 
 export const createUser = asyncHandler(async (req, res) => {
@@ -57,19 +60,36 @@ export const createUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Name, email and password are required");
   }
+const allowedRoles =
+  req.user.role === "super_admin"
+    ? ["author", "admin", "super_admin"]
+    : ["author", "admin"];
 
-  if (!["admin", "author"].includes(role)) {
-    res.status(400);
-    throw new Error("Role must be admin or author");
+if (!allowedRoles.includes(role)) {
+  res.status(400);
+  throw new Error("Invalid role");
+}
+
+  // Admin kisi admin ko create nahi kar sakta
+  if (req.user.role === "admin" && role !== "author") {
+    res.status(403);
+    throw new Error("Admins can only create authors");
   }
 
   const exists = await User.findOne({ email });
+
   if (exists) {
     res.status(409);
     throw new Error("A user with this email already exists");
   }
 
-  const user = await User.create({ name, email, password, role });
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role
+  });
+
   res.status(201).json({
     id: user._id,
     name: user.name,
@@ -87,10 +107,38 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  if (req.body.role && !["admin", "author"].includes(req.body.role)) {
-    res.status(400);
-    throw new Error("Role must be admin or author");
-  }
+if (
+  req.user.role === "admin" &&
+  user.role !== "author"
+) {
+  res.status(403);
+  throw new Error("Admins can only edit authors");
+}
+
+if (user.role === "super_admin") {
+  res.status(403);
+  throw new Error("Super Admin account cannot be modified");
+}
+
+
+  if (req.body.role) {
+
+    if (
+        !["author","admin","super_admin"].includes(req.body.role)
+    ) {
+        res.status(400);
+        throw new Error("Invalid role");
+    }
+
+    // Admin cannot assign admin/super_admin role
+    if (
+        req.user.role === "admin" &&
+        req.body.role !== "author"
+    ) {
+        res.status(403);
+        throw new Error("Admins can only manage authors");
+    }
+}
 
   if (req.body.email) {
     const emailOwner = await User.findOne({ email: req.body.email });
@@ -100,13 +148,6 @@ export const updateUser = asyncHandler(async (req, res) => {
     }
   }
 
-  if (user.role === "admin" && req.body.role && req.body.role !== "admin") {
-    const adminCount = await User.countDocuments({ role: "admin" });
-    if (adminCount <= 1) {
-      res.status(400);
-      throw new Error("At least one admin account is required");
-    }
-  }
 
   user.name = req.body.name ?? user.name;
   user.email = req.body.email ?? user.email;
@@ -125,23 +166,53 @@ export const updateUser = asyncHandler(async (req, res) => {
 });
 
 export const deleteUser = asyncHandler(async (req, res) => {
-  if (String(req.user._id) === req.params.id) {
-    res.status(400);
-    throw new Error("You cannot delete your own account while logged in");
-  }
 
-  const adminCount = await User.countDocuments({ role: "admin" });
-  const user = await User.findById(req.params.id);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
+    if(String(req.user._id)===req.params.id){
+        res.status(400);
+        throw new Error("You cannot delete yourself");
+    }
 
-  if (user.role === "admin" && adminCount <= 1) {
-    res.status(400);
-    throw new Error("At least one admin account is required");
-  }
+    const user = await User.findById(req.params.id);
 
-  await user.deleteOne();
-  res.json({ message: "User deleted" });
+    if(!user){
+        res.status(404);
+        throw new Error("User not found");
+    }
+
+    // Nobody can delete Super Admin
+    if(user.role==="super_admin"){
+        res.status(403);
+        throw new Error("Super Admin cannot be deleted");
+    }
+
+    // Admin can delete only Authors
+    if(req.user.role==="admin"){
+
+        if(user.role!=="author"){
+            res.status(403);
+            throw new Error("Admins can delete only authors");
+        }
+
+    }
+
+    // Last admin protection
+    if(user.role==="admin"){
+
+        const totalAdmins=await User.countDocuments({
+            role:"admin"
+        });
+
+        if(totalAdmins<=1){
+            res.status(400);
+            throw new Error("Cannot delete the last admin");
+        }
+
+    }
+
+    await user.deleteOne();
+
+    res.json({
+        message:"User deleted"
+    });
+
 });
