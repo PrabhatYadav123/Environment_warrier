@@ -1,12 +1,14 @@
-import { BarChart3, Folder, LogOut, Newspaper, PenSquare, User, Users } from "lucide-react";
+import { BarChart3, Folder, LogOut, Newspaper,Mail, PenSquare, User, Users } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import Footer from "../components/Footer.jsx"; // ← Add
 
 const links = [
   ["Dashboard", "/admin", BarChart3],
   ["Manage Blogs", "/admin/blogs", Newspaper],
   ["Create Blog", "/admin/blogs/new", PenSquare],
   ["Categories", "/admin/categories", Folder],
+  ["Contacts",      "/admin/contacts",    Mail],  
   ["Users", "/admin/users", Users, "admin"],
   ["Profile", "/admin/profile", User]
 ];
@@ -21,7 +23,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-mist">
+    <div className="min-h-screen bg-mist flex flex-col">  {/* ← flex flex-col add kiya */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-ink/10 bg-white p-4 lg:block">
         <Link to="/" className="block font-black text-forest">
           Environment Warrior CMS
@@ -47,7 +49,11 @@ export default function AdminLayout() {
           <LogOut size={18} /> Logout
         </button>
       </aside>
-      <div className="lg:pl-64">
+
+      {/* Right side — flex-col so footer sticks to bottom */}
+      <div className="lg:pl-64 flex flex-col flex-1">
+
+        {/* Mobile Header */}
         <header className="sticky top-0 z-30 border-b border-ink/10 bg-white px-4 py-3 lg:hidden">
           <div className="flex items-center justify-between">
             <Link to="/admin" className="font-black text-forest">
@@ -65,9 +71,15 @@ export default function AdminLayout() {
             ))}
           </nav>
         </header>
-        <main className="mx-auto max-w-7xl px-4 py-8">
+
+        {/* Main Content */}
+        <main className="mx-auto max-w-7xl px-4 py-8 w-full flex-1">  {/* ← flex-1 add kiya */}
           <Outlet />
         </main>
+
+        {/* Footer */}
+        <Footer />  {/* ← Add kiya */}
+
       </div>
     </div>
   );

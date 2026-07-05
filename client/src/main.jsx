@@ -20,6 +20,7 @@ import Contact from "./pages/Contact.jsx";
 import Gallery from "./pages/Gallery.jsx";
 import Home from "./pages/Home.jsx";
 import Videos from "./pages/Videos.jsx";
+import Contacts from "./admin/Contacts.jsx"; 
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -57,6 +58,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="categories" element={<Categories />} />
               <Route path="users" element={<Users />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="contacts" element={<Contacts />} />
             </Route>
           </Routes>
         </AuthProvider>
