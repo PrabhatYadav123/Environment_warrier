@@ -1,14 +1,12 @@
 require("dotenv").config();
 const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const FormData = require("form-data");
+const { v2: cloudinary } = require("cloudinary");
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const BLOG_API_URL = process.env.BLOG_API_URL;
 const BLOG_API_TOKEN = process.env.BLOG_API_TOKEN;
-
-const { v2: cloudinary } = require("cloudinary");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -16,279 +14,303 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Step 1 ke upar ye function add karo
+// ✅ Category fetch or create
 async function fetchOrCreateCategory(categoryName) {
-  // Sabhi categories fetch karo
   const res = await axios.get(`${BLOG_API_URL}/api/categories`);
-  const categories = res.data;
-
-  // Match dhundo
-  const match = categories.find(
-    (c) => c.name?.toLowerCase() === categoryName.toLowerCase(),
+  const match = res.data.find(
+    (c) => c.name?.toLowerCase() === categoryName.toLowerCase()
   );
+  if (match) return match._id;
 
-  if (match) {
-    console.log(`Category found: ${match.name} (${match._id})`);
-    return match._id;
-  }
-
-  // Nahi mili toh create karo
   const created = await axios.post(
     `${BLOG_API_URL}/api/categories`,
     { name: categoryName },
-    {
-      headers: {
-        Authorization: `Bearer ${BLOG_API_TOKEN}`,
-      },
-    },
+    { headers: { Authorization: `Bearer ${BLOG_API_TOKEN}` } }
   );
-
-  console.log(`Category created: ${created.data.name}`);
   return created.data._id;
 }
 
-// Step 1: GNews se news fetch karo
+// ✅ Step 1: News fetch
 async function fetchEnvironmentNews() {
-  console.log("📰 Fetching environment news from GNews...");
+  console.log("📰 Fetching environment news...");
+
+  // Random topics rotate karo — variety ke liye
+  const topics = [
+    "climate change India 2026",
+    "air pollution health impact India",
+    "renewable energy solar India",
+    "deforestation wildlife India",
+    "water crisis India 2026",
+    "plastic pollution ocean India",
+    "flood drought India climate",
+    "electric vehicles India green",
+  ];
+  const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+  console.log(`Topic: ${randomTopic}`);
 
   const res = await axios.get("https://gnews.io/api/v4/search", {
     params: {
-      q: "environment OR climate change OR sustainability",
+      q: randomTopic,
       lang: "en",
-      max: 5,
+      max: 7,
       apikey: GNEWS_API_KEY,
     },
   });
 
-  const articles = res.data.articles;
-  console.log(`Found ${articles.length} articles`);
-  return articles;
+  console.log(`Found ${res.data.articles.length} articles`);
+  return res.data.articles;
 }
 
-// Step 2: Gemini se blog generate karo
+// ✅ Step 2: Blog generate
 async function generateBlog(articles) {
   console.log("✍️ Generating blog with Gemini...");
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      temperature: 0.8,
+      topP: 0.9,
+      maxOutputTokens: 8192,
+    },
+  });
 
   const newsContext = articles
-    .map(
-      (a, i) => `${i + 1}. Title: ${a.title}\n Description: ${a.description}`,
-    )
+    .map((a, i) => `${i + 1}. Title: ${a.title}\n   Description: ${a.description}\n   Source: ${a.source?.name || "Unknown"}`)
     .join("\n\n");
 
- const prompt = `
-You are an award-winning environmental journalist and SEO content writer writing for "Environment Warrior".
+  const today = new Date().toLocaleDateString("en-IN", {
+    day: "numeric", month: "long", year: "numeric"
+  });
 
-Today's news:
+  const prompt = `
+You are an award-winning environmental journalist writing for "Environment Warrior" — India's leading environmental awareness platform.
+
+Today is ${today}. Here are the latest news articles:
+
 ${newsContext}
 
-Select the SINGLE most important environmental story and convert it into a professional long-form article.
+TASK: Select the SINGLE most impactful environmental story and write a world-class long-form blog article.
 
-STRICT REQUIREMENTS
+═══════════════════════════════════════
+CONTENT REQUIREMENTS
+═══════════════════════════════════════
 
-Return ONLY valid JSON.
-Do NOT use markdown code fences.
-Do NOT explain anything.
+LENGTH: 2000-2500 words
+TONE: Authoritative yet accessible — like BBC Environment + National Geographic combined
+STYLE: Human, emotional, fact-based, storytelling
+AUDIENCE: Educated Indians who care about environment
+UNIQUE ANGLE: Always connect global issues to India specifically
 
-The article must be:
+QUALITY CHECKLIST:
+✅ Original insights — not just rephrasing the news
+✅ Real statistics only — no hallucinated numbers
+✅ Strong narrative arc — beginning, middle, end
+✅ Local Indian context wherever possible
+✅ Actionable takeaways for Indian readers
+✅ Natural keyword integration — not forced
+✅ Active voice throughout
+✅ Short paragraphs — 2-4 lines max
+✅ Smooth transitions between sections
+✅ No repetition of sentences or ideas
 
-- 1800-2500 words
-- 100% original
-- Human-like writing
-- SEO optimized
-- Easy to read
-- Fact based
-- No hallucinated statistics
-- Natural storytelling style
-- Active voice
-- Professional tone
+═══════════════════════════════════════
+SEO REQUIREMENTS
+═══════════════════════════════════════
 
-Formatting rules:
+TITLE: 50-65 characters, emotional, curiosity-driving
+SUBTITLE: 80-120 characters, expands on title
+EXCERPT: 150-160 characters, meta description quality
+TAGS: 5 specific long-tail SEO keywords
 
-- Start with an engaging introduction.
-- Use H2 headings (##) only.
-- Every section should have 3-5 paragraphs.
-- Paragraphs should be only 2-4 lines long.
-- Use bullet lists where appropriate.
-- Bold important facts.
-- Add transitions between sections.
-- End with a strong conclusion.
-- Never leave a heading empty.
-- Avoid repeating the same sentence.
+═══════════════════════════════════════
+STRUCTURE (use these exact H2 headings)
+═══════════════════════════════════════
 
-SEO Rules:
+## The Crisis No One Is Talking About
+## What Is Actually Happening
+## Why This Matters for India
+## The Science Behind It
+## The Human Cost
+## Economic Consequences
+## Global Response
+## What India Must Do
+## How You Can Make a Difference
+## The Road Ahead
 
-- Create a highly clickable title.
-- Naturally repeat the main keyword throughout the article.
-- Include long-tail keywords.
-- Write an engaging meta description (excerpt).
-- Use semantic keywords.
-- Make the article suitable for Google ranking.
+═══════════════════════════════════════
+OUTPUT FORMAT
+═══════════════════════════════════════
 
-Return JSON in exactly this format:
+Return ONLY valid JSON. No markdown fences. No explanation. No extra text.
 
 {
-"title":"",
-"subtitle":"",
-"excerpt":"",
-"content":"",
-"category":"",
-"tags":["","","","",""],
-"difficulty":"Intermediate",
-"coverImagePrompt":""
+  "title": "",
+  "subtitle": "",
+  "excerpt": "",
+  "content": "",
+  "category": "",
+  "tags": ["", "", "", "", ""],
+  "difficulty": "Intermediate",
+  "coverImagePrompt": ""
 }
 
-Field rules
-
-title
-- 50-65 characters
-- emotional
-- SEO friendly
-
-subtitle
-- 80-120 characters
-
-excerpt
-- 150-180 characters
-
-content
-- 1800-2500 words
-- Markdown
-- Structure:
-
-## Introduction
-
-## Why this matters
-
-## What happened
-
-## Scientific explanation
-
-## Environmental impact
-
-## Economic impact
-
-## Global perspective
-
-## Solutions
-
-## What governments can do
-
-## What individuals can do
-
-## Key Takeaways
-
-## Conclusion
-
-tags
-Exactly 5 lowercase SEO tags.
-
-difficulty
-Beginner, Intermediate or Advanced.
-
-coverImagePrompt
-15-20 words describing a realistic National Geographic style environmental photograph.
+FIELD RULES:
+- title: 50-65 chars, SEO optimized, emotional hook
+- subtitle: 80-120 chars, supports the title
+- excerpt: 150-160 chars EXACTLY, no more
+- content: 2000-2500 words, markdown, all 10 sections filled
+- category: ONE of these only: Climate Change, Air Pollution, Water Crisis, Deforestation, Renewable Energy, Wildlife, Ocean Conservation, Sustainable Living
+- tags: exactly 5 lowercase strings, long-tail SEO keywords
+- difficulty: Beginner OR Intermediate OR Advanced
+- coverImagePrompt: 15-20 words, National Geographic style photo description
 `;
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
 
-  // JSON extract karo response se
+  // JSON clean karo
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Gemini ne valid JSON nahi diya!");
+  if (!jsonMatch) throw new Error("Invalid JSON from Gemini");
 
-  const blog = JSON.parse(jsonMatch[0]);
-  console.log(`Blog title: ${blog.title}`);
+  // Clean control characters
+  const cleanJson = jsonMatch[0]
+    .replace(/[\x00-\x1F\x7F]/g, " ")
+    .replace(/\n/g, "\\n");
+
+  const blog = JSON.parse(cleanJson);
+  console.log(`✅ Blog: "${blog.title}"`);
+  console.log(`   Words: ~${blog.content.split(" ").length}`);
   return blog;
 }
 
-async function publishBlog(blogData, coverImage) {
-  console.log("🚀 Publishing blog to site...");
+// ✅ Step 3: Multiple images generate karo
+async function generateMultipleImages(blog) {
+  console.log("🖼️ Generating multiple images...");
 
+  // Featured image ke liye main prompt
+  const featuredPrompt = blog.coverImagePrompt;
 
-  // Category ID fetch karo pehle
+  // Gallery ke liye alag alag prompts
+  const galleryPrompts = [
+    `${blog.tags[0]} environmental impact India aerial view photography`,
+    `${blog.tags[1]} community action people working together outdoors`,
+    `${blog.tags[2]} nature wildlife ecosystem close up macro photography`,
+  ];
+
+  const allPrompts = [featuredPrompt, ...galleryPrompts];
+
+  const imageUrls = allPrompts.map((prompt, i) => {
+    const encoded = encodeURIComponent(
+      `${prompt}, professional photography, 4k, high quality, realistic`
+    );
+    // Alag seed se alag image milegi
+    return `https://image.pollinations.ai/prompt/${encoded}?width=1200&height=630&nolog=true&seed=${Date.now() + i * 1000}`;
+  });
+
+  console.log(`✅ ${imageUrls.length} image URLs generated`);
+  return imageUrls;
+}
+
+// ✅ Step 4: Upload all images to Cloudinary
+async function uploadAllToCloudinary(imageUrls) {
+  console.log("☁️ Uploading all images to Cloudinary...");
+
+  const uploaded = [];
+
+  for (let i = 0; i < imageUrls.length; i++) {
+    console.log(`  Uploading image ${i + 1}/${imageUrls.length}...`);
+    try {
+      const result = await cloudinary.uploader.upload(imageUrls[i], {
+        folder: "environment-warrior/auto-generated",
+        timeout: 60000,
+      });
+      uploaded.push({
+        url: result.secure_url,
+        publicId: result.public_id,
+        resourceType: result.resource_type,
+        format: result.format,
+        originalName: `ai-generated-${i + 1}.jpg`,
+      });
+      console.log(`  ✅ Image ${i + 1} uploaded`);
+
+      // Rate limit avoid karne ke liye
+      await new Promise(r => setTimeout(r, 2000));
+
+    } catch (err) {
+      console.error(`  ❌ Image ${i + 1} failed: ${err.message}`)
+    }
+  }
+
+  console.log(`✅ ${uploaded.length} images uploaded to Cloudinary`)
+  return uploaded
+}
+
+async function publishBlog(blogData, featuredImage, galleryImages) {
+  console.log("🚀 Publishing blog...");
   const categoryId = await fetchOrCreateCategory(blogData.category);
 
   const payload = {
-  ...blogData,
-  category: categoryId,
-  featuredImage: coverImage,
-  galleryImages: [coverImage],
-  status: "published",
-};
+    title: blogData.title,
+    subtitle: blogData.subtitle,
+    excerpt: blogData.excerpt,
+    content: blogData.content,
+    category: categoryId,
+    tags: blogData.tags,
+    difficulty: blogData.difficulty,
+    featuredImage: featuredImage,         // ← Pehli image
+    galleryImages: galleryImages,          // ← Baaki 3 images
+    status: "published",
+  };
 
-console.log(JSON.stringify(payload, null, 2));
+  const res = await axios.post(
+    `${BLOG_API_URL}/api/blogs`,
+    payload,
+    {
+      headers: {
+        Authorization: `Bearer ${BLOG_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
-const res = await axios.post(
-  `${BLOG_API_URL}/api/blogs`,
-  payload,
-  {
-    headers: {
-      Authorization: `Bearer ${BLOG_API_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-  }
-);
-  console.log(`✅ Blog published! Slug: ${res.data.slug}`);
+  console.log(`✅ Published! Slug: ${res.data.slug}`);
   return res.data;
 }
 
-async function generateCoverImage(coverImagePrompt) {
-  console.log("🖼️ Generating cover image...");
-
-  const prompt = encodeURIComponent(
-    `${coverImagePrompt} high quality professional photography 4k`,
-  );
-
-  const imageUrl = `https://image.pollinations.ai/prompt/${prompt}?width=1200&height=630&nolog=true`;
-
-  console.log(`✅ Image URL: ${imageUrl}`);
-  return imageUrl;
-}
-
-async function uploadImageToCloudinary(imageUrl) {
-  console.log("☁️ Uploading image to Cloudinary...");
-
-  const result = await cloudinary.uploader.upload(imageUrl, {
-    folder: "environment-warrior",
-  });
-
-  console.log("✅ Uploaded to Cloudinary");
-
-  return {
-    url: result.secure_url,
-    publicId: result.public_id,
-    resourceType: result.resource_type,
-    format: result.format,
-    originalName: "generated-image.jpg",
-  };
-}
-
-// Main function
+// ✅ Main
 async function main() {
+  console.log("🌍 Environment Warrior — Auto Blog Generator");
+  console.log("==========================================");
+
   try {
     const articles = await fetchEnvironmentNews();
     const blogData = await generateBlog(articles);
-   const generatedImageUrl = await generateCoverImage(
-  blogData.coverImagePrompt
-);
 
-const cloudinaryImage = await uploadImageToCloudinary(
-  generatedImageUrl
-);
+    // Multiple images generate karo
+    const imageUrls = await generateMultipleImages(blogData);
 
-const published = await publishBlog(blogData, cloudinaryImage);
+    // Sab Cloudinary pe upload karo
+    const uploadedImages = await uploadAllToCloudinary(imageUrls);
+
+    // Pehli = featured, baaki = gallery
+    const featuredImage = uploadedImages[0];
+    const galleryImages = uploadedImages.slice(1); // [1, 2, 3]
+
+    const published = await publishBlog(blogData, featuredImage, galleryImages);
 
     console.log("");
-    console.log("=== SUCCESS ===");
-    console.log(`Title: ${published.title}`);
-    console.log(`URL: ${BLOG_API_URL}/blog/${published.slug}`);
+    console.log("🎉 SUCCESS!");
+    console.log("===========");
+    console.log(`📝 Title:    ${published.title}`);
+    console.log(`🖼️ Featured: ${featuredImage.url}`);
+    console.log(`🎨 Gallery:  ${galleryImages.length} images`);
+    console.log(`🔗 URL:      ${BLOG_API_URL}/blog/${published.slug}`);
+
   } catch (err) {
     console.error("❌ Error:", err.message);
-    if (err.response) {
-      console.error("Response:", err.response.data);
+    if (err.response?.data) {
+      console.error("API:", JSON.stringify(err.response.data, null, 2));
     }
     process.exit(1);
   }
