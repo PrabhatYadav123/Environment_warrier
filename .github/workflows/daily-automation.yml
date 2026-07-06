@@ -1,0 +1,42 @@
+name: Daily Blog Automation
+
+on:
+  schedule:
+    # 8:00 AM IST
+    - cron: "30 2 * * *"
+
+    # 6:00 PM IST
+    - cron: "30 12 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  generate-blog:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: automation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Daily Blog Script
+        env:
+          GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BLOG_API_URL: ${{ secrets.BLOG_API_URL }}
+          BLOG_API_TOKEN: ${{ secrets.BLOG_API_TOKEN }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: node daily-blog.js

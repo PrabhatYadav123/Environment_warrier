@@ -216,7 +216,7 @@ async function publishBlog(blogData, coverImage) {
   category: categoryId,
   featuredImage: coverImage,
   galleryImages: [coverImage],
-  published: "published",
+  status: "published",
 };
 
 console.log(JSON.stringify(payload, null, 2));
