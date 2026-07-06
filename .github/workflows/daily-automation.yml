@@ -25,10 +25,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install dependencies
         run: npm install
+
+      - name: Check Secrets
+        env:
+          GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BLOG_API_URL: ${{ secrets.BLOG_API_URL }}
+          BLOG_API_TOKEN: ${{ secrets.BLOG_API_TOKEN }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: |
+          echo "GNEWS length=${#GNEWS_API_KEY}"
+          echo "GEMINI length=${#GEMINI_API_KEY}"
+          echo "BLOG_API_URL length=${#BLOG_API_URL}"
+          echo "BLOG_API_TOKEN length=${#BLOG_API_TOKEN}"
+          echo "CLOUDINARY_NAME length=${#CLOUDINARY_CLOUD_NAME}"
 
       - name: Run Daily Blog Script
         env:
@@ -40,11 +56,3 @@ jobs:
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: node daily-blog.js
-
-        - name: Check Secrets
-      run: |
-    echo "GNEWS=${#GNEWS_API_KEY}"
-      echo "GEMINI=${#GEMINI_API_KEY}"
-  env:
-    GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
-    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
