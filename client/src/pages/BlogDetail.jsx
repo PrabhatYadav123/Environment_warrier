@@ -4,6 +4,9 @@ import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async"; // ← Add
 import api from "../services/api";
 import { formatDate, shareBlog } from "../utils/format";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 export default function BlogDetail() {
   const { slug } = useParams();
@@ -159,13 +162,18 @@ export default function BlogDetail() {
           <p className="text-sm font-bold uppercase tracking-wide text-forest">
             {blog.category?.name || "Environment"}
           </p>
-          <h1 className="text-4xl font-black leading-tight md:text-5xl">
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
             {blog.title}
           </h1>
           {blog.subtitle && (
             <p className="text-xl leading-8 text-ink/70">{blog.subtitle}</p>
           )}
-          <div className="flex flex-wrap gap-3 text-sm text-ink/60">
+          {blog.excerpt && (
+            <p className="mt-4 text-lg italic text-gray-600 border-l-4 border-green-600 pl-4">
+              {blog.excerpt}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-4 text-gray-500 text-sm border-b pb-6">
             <span>{formatDate(blog.createdAt)}</span>
             <span>{blog.readingTime} min read</span>
             {blog.author?.name && <span>By {blog.author.name}</span>}
@@ -187,20 +195,42 @@ export default function BlogDetail() {
           alt={`${blog.title} - Environment Warrior`}
           loading="eager"
           decoding="async"
-          className="h-[420px] w-full object-contain px-8 rounded-xl"
+          className="w-full rounded-2xl object-cover shadow-xl max-h-[550px]"
         />
       )}
       <div className="mx-auto grid max-w-4xl gap-8 px-4 py-10">
-        <div
-          className="prose max-w-none prose-headings:text-ink prose-a:text-forest"
-          dangerouslySetInnerHTML={{ __html: blog.content }}
-        />
+        <hr className="my-10 border-gray-200" />
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+          className="prose prose-lg lg:prose-xl max-w-none
+    prose-headings:font-bold
+    prose-headings:text-gray-900
+    prose-p:text-gray-700
+    prose-p:leading-8
+    prose-li:leading-8
+    prose-strong:text-black
+    prose-a:text-green-700
+    prose-blockquote:border-l-4
+    prose-blockquote:border-green-600
+    prose-blockquote:bg-green-50
+    prose-blockquote:py-2
+    prose-blockquote:px-4
+    prose-img:rounded-xl
+    prose-img:shadow-lg
+    prose-table:border
+    prose-th:border
+    prose-td:border
+    prose-code:text-red-600"
+        >
+          {blog.content}
+        </ReactMarkdown>
         {blog.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {blog.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800"
+                className="rounded-full bg-green-50 border border-green-200 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition"
               >
                 #{tag}
               </span>
@@ -208,7 +238,7 @@ export default function BlogDetail() {
           </div>
         )}
         {blog.galleryImages?.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
             {blog.galleryImages.map((image) => (
               <img
                 key={image.url}
@@ -216,7 +246,7 @@ export default function BlogDetail() {
                 alt={`${blog.title} image`}
                 loading="lazy"
                 decoding="async"
-                className="rounded-md object-cover"
+                className="rounded-xl shadow-lg w-full h-72 object-cover hover:scale-[1.02] transition"
               />
             ))}
           </div>

@@ -78,34 +78,118 @@ async function generateBlog(articles) {
     )
     .join("\n\n");
 
-  const prompt = `
-You are a professional environment blog writer for a website called "Environment Warrior".
+ const prompt = `
+You are an award-winning environmental journalist and SEO content writer writing for "Environment Warrior".
 
-Today's top news articles:
+Today's news:
 ${newsContext}
 
-Your task: Write a detailed, SEO-optimized blog post based on the most important topic from above news.
+Select the SINGLE most important environmental story and convert it into a professional long-form article.
 
-STRICT RULES:
-- Return ONLY raw JSON — no markdown, no backticks, no explanation
-- Content must be minimum 100 words in proper markdown
-- Use ## for headings, bullet points, bold text, code blocks where needed
-- excerpt must be exactly under 20 characters
-- Pick category EXACTLY from this list.
-- tags must be array of 4-5 lowercase strings
-- difficulty must be exactly one of: Beginner, Intermediate, Advanced
-- coverImagePrompt must describe a realistic nature/environment photo scene in 10-15 words
+STRICT REQUIREMENTS
 
-Return this exact JSON structure:
+Return ONLY valid JSON.
+Do NOT use markdown code fences.
+Do NOT explain anything.
+
+The article must be:
+
+- 1800-2500 words
+- 100% original
+- Human-like writing
+- SEO optimized
+- Easy to read
+- Fact based
+- No hallucinated statistics
+- Natural storytelling style
+- Active voice
+- Professional tone
+
+Formatting rules:
+
+- Start with an engaging introduction.
+- Use H2 headings (##) only.
+- Every section should have 3-5 paragraphs.
+- Paragraphs should be only 2-4 lines long.
+- Use bullet lists where appropriate.
+- Bold important facts.
+- Add transitions between sections.
+- End with a strong conclusion.
+- Never leave a heading empty.
+- Avoid repeating the same sentence.
+
+SEO Rules:
+
+- Create a highly clickable title.
+- Naturally repeat the main keyword throughout the article.
+- Include long-tail keywords.
+- Write an engaging meta description (excerpt).
+- Use semantic keywords.
+- Make the article suitable for Google ranking.
+
+Return JSON in exactly this format:
+
 {
-  "title": "Engaging SEO friendly title here",
-  "excerpt": "Compelling short description under 280 chars that makes user want to read",
-  "content": "## Introduction\n\nFull blog content here in markdown...\n\n## Section 2\n\ncontent...",
-  "category": "exact category name from list",
-  "tags": ["climate", "environment", "nature", "sustainability"],
-  "difficulty": "Beginner",
-  "coverImagePrompt": "lush green forest with sunlight streaming through trees cinematic"
+"title":"",
+"subtitle":"",
+"excerpt":"",
+"content":"",
+"category":"",
+"tags":["","","","",""],
+"difficulty":"Intermediate",
+"coverImagePrompt":""
 }
+
+Field rules
+
+title
+- 50-65 characters
+- emotional
+- SEO friendly
+
+subtitle
+- 80-120 characters
+
+excerpt
+- 150-180 characters
+
+content
+- 1800-2500 words
+- Markdown
+- Structure:
+
+## Introduction
+
+## Why this matters
+
+## What happened
+
+## Scientific explanation
+
+## Environmental impact
+
+## Economic impact
+
+## Global perspective
+
+## Solutions
+
+## What governments can do
+
+## What individuals can do
+
+## Key Takeaways
+
+## Conclusion
+
+tags
+Exactly 5 lowercase SEO tags.
+
+difficulty
+Beginner, Intermediate or Advanced.
+
+coverImagePrompt
+15-20 words describing a realistic National Geographic style environmental photograph.
 `;
 
   const result = await model.generateContent(prompt);
@@ -132,7 +216,7 @@ async function publishBlog(blogData, coverImage) {
   category: categoryId,
   featuredImage: coverImage,
   galleryImages: [coverImage],
-  published: true,
+  published: "published",
 };
 
 console.log(JSON.stringify(payload, null, 2));

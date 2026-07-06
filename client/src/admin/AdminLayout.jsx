@@ -1,14 +1,53 @@
-import { BarChart3, Folder, LogOut, Newspaper, Mail, PenSquare, User, Users } from "lucide-react";
+import {
+  BarChart3,
+  Folder,
+  LogOut,
+  Newspaper,
+  Mail,
+  PenSquare,
+  User,
+  Users,
+} from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import Footer from "../components/Footer.jsx";
 
 const links = [
-  { label: "Dashboard",    href: "/admin",            icon: BarChart3, role: null,    end: true  },
-  { label: "Manage Blogs", href: "/admin/blogs",      icon: Newspaper, role: null,    end: true  },
-  { label: "Create Blog",  href: "/admin/blogs/new",  icon: PenSquare, role: null,    end: true  },
-  { label: "Categories",   href: "/admin/categories", icon: Folder,    role: null,    end: false },
-  { label: "Contacts",     href: "/admin/contacts",   icon: Mail,      role: null,    end: false },
+  {
+    label: "Dashboard",
+    href: "/admin",
+    icon: BarChart3,
+    role: null,
+    end: true,
+  },
+  {
+    label: "Manage Blogs",
+    href: "/admin/blogs",
+    icon: Newspaper,
+    role: null,
+    end: true,
+  },
+  {
+    label: "Create Blog",
+    href: "/admin/blogs/new",
+    icon: PenSquare,
+    role: null,
+    end: true,
+  },
+  {
+    label: "Categories",
+    href: "/admin/categories",
+    icon: Folder,
+    role: null,
+    end: false,
+  },
+  {
+    label: "Contacts",
+    href: "/admin/contacts",
+    icon: Mail,
+    role: null,
+    end: false,
+  },
   {
     label: "Users",
     href: "/admin/users",
@@ -16,7 +55,13 @@ const links = [
     roles: ["admin", "super_admin"],
     end: false,
   },
-  { label: "Profile",      href: "/admin/profile",    icon: User,      role: null,    end: false },
+  {
+    label: "Profile",
+    href: "/admin/profile",
+    icon: User,
+    role: null,
+    end: false,
+  },
 ];
 
 export default function AdminLayout() {
@@ -45,7 +90,9 @@ export default function AdminLayout() {
                 end={end}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold ${
-                    isActive ? "bg-forest text-white" : "text-ink/70 hover:bg-mist"
+                    isActive
+                      ? "bg-forest text-white"
+                      : "text-ink/70 hover:bg-mist"
                   }`
                 }
               >
@@ -59,7 +106,6 @@ export default function AdminLayout() {
       </aside>
 
       <div className="lg:pl-64 flex flex-col flex-1">
-
         {/* Mobile Header */}
         <header className="sticky top-0 z-30 border-b border-ink/10 bg-white px-4 py-3 lg:hidden">
           <div className="flex items-center justify-between">
@@ -77,7 +123,7 @@ export default function AdminLayout() {
                 <NavLink
                   key={href}
                   to={href}
-                  end={end} 
+                  end={end}
                   className={({ isActive }) =>
                     `btn-secondary whitespace-nowrap ${isActive ? "bg-forest text-white" : ""}`
                   }
