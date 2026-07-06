@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://environment-warrier.onrender.com/sitemap.xml"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/(.*)",
