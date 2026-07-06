@@ -40,3 +40,11 @@ jobs:
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: node daily-blog.js
+
+        - name: Check Secrets
+      run: |
+    echo "GNEWS=${#GNEWS_API_KEY}"
+      echo "GEMINI=${#GEMINI_API_KEY}"
+  env:
+    GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
+    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
