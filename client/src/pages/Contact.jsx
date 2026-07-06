@@ -60,19 +60,19 @@ export default function Contact() {
             {
               icon: Mail,
               title: "Email Us",
-              text: "contact@envwarrior.org",
+              text: "prabhatkumar@gmail.com",
               sub: "We reply within 24 hours"
             },
             {
               icon: Phone,
               title: "Call Us",
-              text: "+91 98765 43210",
+              text: "+91 9708581410",
               sub: "Mon–Sat, 10am – 6pm IST"
             },
             {
               icon: MapPin,
               title: "Location",
-              text: "Mumbai, Maharashtra",
+              text: "Bengaluru, Karnataka",
               sub: "India 🇮🇳"
             },
             {
