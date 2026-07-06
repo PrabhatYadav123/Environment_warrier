@@ -1,0 +1,18 @@
+{
+  "name": "automation",
+  "version": "1.0.0",
+  "description": "Automation",
+  "license": "ISC",
+  "author": "Prabhat",
+  "type": "commonjs",
+  "main": "daily-blog.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.18.1",
+    "cloudinary": "^2.10.0",
+    "dotenv": "^17.4.2"
+  }
+}

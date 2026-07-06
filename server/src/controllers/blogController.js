@@ -50,10 +50,47 @@ async function getBlogPayload(req) {
   if (req.body.title) {
     payload.slug = slugify(req.body.title, { lower: true, strict: true });
   }
-  if (files.featuredImage?.[0]) payload.featuredImage = await toMedia(files.featuredImage[0]);
-  if (files.galleryImages?.length) payload.galleryImages = await Promise.all(files.galleryImages.map(toMedia));
-  if (files.video?.[0]) payload.video = await toMedia(files.video[0]);
-  if (files.audio?.[0]) payload.audio = await toMedia(files.audio[0]);
+ // Featured Image
+if (files.featuredImage?.[0]) {
+  payload.featuredImage = await toMedia(files.featuredImage[0]);
+} else if (req.body.featuredImage) {
+  payload.featuredImage =
+    typeof req.body.featuredImage === "string"
+      ? JSON.parse(req.body.featuredImage)
+      : req.body.featuredImage;
+}
+
+// Gallery Images
+if (files.galleryImages?.length) {
+  payload.galleryImages = await Promise.all(
+    files.galleryImages.map(toMedia)
+  );
+} else if (req.body.galleryImages) {
+  payload.galleryImages =
+    typeof req.body.galleryImages === "string"
+      ? JSON.parse(req.body.galleryImages)
+      : req.body.galleryImages;
+}
+
+// Video
+if (files.video?.[0]) {
+  payload.video = await toMedia(files.video[0]);
+} else if (req.body.video) {
+  payload.video =
+    typeof req.body.video === "string"
+      ? JSON.parse(req.body.video)
+      : req.body.video;
+}
+
+// Audio
+if (files.audio?.[0]) {
+  payload.audio = await toMedia(files.audio[0]);
+} else if (req.body.audio) {
+  payload.audio =
+    typeof req.body.audio === "string"
+      ? JSON.parse(req.body.audio)
+      : req.body.audio;
+}
 
   Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
   return payload;
