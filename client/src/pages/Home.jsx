@@ -18,7 +18,7 @@ export default function Home() {
   const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
-    api.get("/blogs?limit=3").then(({ data }) => setBlogs(data.items)).catch(() => setBlogs([]));
+    api.get("/blogs?limit=7").then(({ data }) => setBlogs(data.items)).catch(() => setBlogs([]));
   }, []);
 
   const featuredBlog = blogs.length ? blogs[0] : null;
@@ -169,7 +169,7 @@ const formatDate = (date) =>
 
     {featuredBlog && (
       <Link
-        to={`/blogs/${featuredBlog.slug}`}
+        to={`/blog/${featuredBlog.slug}`}
         className="group mb-14 grid overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-2xl lg:grid-cols-2"
       >
         <div className="overflow-hidden">
@@ -235,7 +235,7 @@ const formatDate = (date) =>
 
         <Link
           key={blog._id}
-          to={`/blogs/${blog.slug}`}
+          to={`/blog/${blog.slug}`}
           className="group overflow-hidden rounded-2xl bg-white shadow transition hover:-translate-y-2 hover:shadow-xl"
         >
 
