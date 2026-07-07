@@ -207,17 +207,6 @@ const formatDate = (date) =>
               <Clock3 size={16} />
               {featuredBlog.readingTime || 5} min
             </span>
-
-            <span className="flex items-center gap-2">
-              <Eye size={16} />
-              {featuredBlog.views || 0}
-            </span>
-
-            <span className="flex items-center gap-2">
-              <Heart size={16} />
-              {featuredBlog.likes || 0}
-            </span>
-
           </div>
 
           <div className="mt-8 flex items-center gap-2 font-semibold text-green-700">
