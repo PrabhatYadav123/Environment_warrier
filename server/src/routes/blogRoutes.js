@@ -7,7 +7,8 @@ import {
   getBlogById,
   likeBlog,
   listBlogs,
-  updateBlog
+  updateBlog,
+  addView
 } from "../controllers/blogController.js";
 import { adminOnly, protect } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
@@ -27,6 +28,7 @@ router.get("/:slug", getBlog);
 router.post("/", protect, adminOnly, blogUpload, createBlog);
 router.put("/:id", protect, adminOnly, blogUpload, updateBlog);
 router.delete("/:id", protect, adminOnly, deleteBlog);
+router.post("/:id/view", addView);
 router.post("/:id/like", likeBlog);
 
 export default router;

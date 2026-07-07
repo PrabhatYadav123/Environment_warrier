@@ -13,16 +13,53 @@ export default function BlogDetail() {
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api
-      .get(`/blogs/${slug}`)
-      .then(({ data }) => setBlog(data))
-      .finally(() => setLoading(false));
-  }, [slug]);
+  const [liked, setLiked] = useState(false);
 
+useEffect(() => {
+  async function fetchBlog() {
+    try {
+      const { data } = await api.get(`/blogs/${slug}`);
+
+      setBlog(data);
+
+      // Like status
+      const alreadyLiked = localStorage.getItem(`liked-${data._id}`);
+      if (alreadyLiked) {
+        setLiked(true);
+      }
+
+      // View count (only once every 24 hours)
+      const viewKey = `viewed-${data._id}`;
+      const lastViewed = localStorage.getItem(viewKey);
+
+      const now = Date.now();
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (!lastViewed || now - Number(lastViewed) > oneDay) {
+        await api.post(`/blogs/${data._id}/view`);
+
+        localStorage.setItem(viewKey, now.toString());
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchBlog();
+}, [slug]);
   async function like() {
+    if (liked) return;
+
     const { data } = await api.post(`/blogs/${blog._id}/like`);
-    setBlog((current) => ({ ...current, likes: data.likes }));
+
+    setBlog((current) => ({
+      ...current,
+      likes: data.likes,
+    }));
+
+    localStorage.setItem(`liked-${blog._id}`, "true");
+
+    setLiked(true);
   }
 
   const description =
@@ -177,11 +214,23 @@ export default function BlogDetail() {
             <span>{formatDate(blog.createdAt)}</span>
             <span>{blog.readingTime} min read</span>
             {blog.author?.name && <span>By {blog.author.name}</span>}
-            <span>{blog.views} views</span>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button className="btn-secondary" onClick={like}>
-              <Heart size={18} /> {blog.likes || 0}
+            <button
+              onClick={like}
+              disabled={liked}
+              className={`btn-secondary transition ${
+                liked
+                  ? "cursor-not-allowed opacity-60"
+                  : "hover:bg-green-600 hover:text-white"
+              }`}
+            >
+              <Heart
+                size={18}
+                className={liked ? "fill-red-500 text-red-500" : ""}
+              />
+
+              {blog.likes || 0}
             </button>
             <button className="btn-secondary" onClick={() => shareBlog(blog)}>
               <Share2 size={18} /> Share

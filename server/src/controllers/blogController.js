@@ -128,6 +128,31 @@ export const listBlogs = asyncHandler(async (req, res) => {
   res.json({ items: items.map((blog) => resolveBlogMedia(blog, req)), total, page, pages: Math.ceil(total / limit) });
 });
 
+
+export const addView = asyncHandler(async (req, res) => {
+  const blog = await Blog.findByIdAndUpdate(
+    req.params.id,
+    {
+      $inc: {
+        views: 1,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!blog) {
+    res.status(404);
+    throw new Error("Blog not found");
+  }
+
+  res.json({
+    success: true,
+    views: blog.views,
+  });
+});
+
 export const getBlog = asyncHandler(async (req, res) => {
   const blog = await Blog.findOne({ slug: req.params.slug }).populate(populate);
   if (!blog || (blog.status !== "published" && !req.user)) {
@@ -135,10 +160,6 @@ export const getBlog = asyncHandler(async (req, res) => {
     throw new Error("Blog not found");
   }
 
-  if (blog.status === "published") {
-    blog.views += 1;
-    await blog.save();
-  }
 
   res.json(resolveBlogMedia(blog, req));
 });
