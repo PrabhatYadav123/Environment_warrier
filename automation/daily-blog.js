@@ -89,13 +89,14 @@ async function generateBlog(articles) {
   console.log("✍️ Generating blog with Gemini...");
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 8192,
-    },
-  });
+ const model = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+  generationConfig: {
+    temperature: 0.7,
+    responseMimeType: "application/json",
+    maxOutputTokens: 8192,
+  },
+});
 
   const newsContext = articles
     .map((a, i) => `${i + 1}. ${a.title}\n   ${a.description}`)
@@ -113,7 +114,7 @@ Today is ${today}.
 NEWS CONTEXT:
 ${newsContext}
 
-Write a professional 2000-word environmental blog article about the most important topic from above.
+Write a professional 1200-1500 word environmental blog article about the most important topic from above.
 
 CRITICAL: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. Start with { and end with }.
 
@@ -137,7 +138,7 @@ IMPORTANT JSON RULES:
 `;
 
   let attempts = 0;
-  const maxAttempts = 3;
+  const maxAttempts = 5;
 
   while (attempts < maxAttempts) {
     attempts++;
