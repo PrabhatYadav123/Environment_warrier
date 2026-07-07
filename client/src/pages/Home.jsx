@@ -267,16 +267,6 @@ const formatDate = (date) =>
                 {blog.readingTime || 5} min
               </span>
 
-              <span className="flex items-center gap-1">
-                <Eye size={15} />
-                {blog.views || 0}
-              </span>
-
-              <span className="flex items-center gap-1">
-                <Heart size={15} />
-                {blog.likes || 0}
-              </span>
-
             </div>
 
             <div className="mt-6 flex items-center justify-between">
