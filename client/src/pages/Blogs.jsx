@@ -42,8 +42,8 @@ export default function Blogs() {
   const metaDescription = search
     ? `Browse blogs related to "${search}" from Environment Warrior. Read articles about climate change, sustainability, conservation and environmental awareness.`
     : category
-    ? `Explore environmental blogs in the selected category from Environment Warrior.`
-    : "Read the latest blogs on climate change, sustainability, conservation, renewable energy, wildlife, pollution and community action from Environment Warrior.";
+      ? `Explore environmental blogs in the selected category from Environment Warrior.`
+      : "Read the latest blogs on climate change, sustainability, conservation, renewable energy, wildlife, pollution and community action from Environment Warrior.";
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -155,34 +155,40 @@ export default function Blogs() {
       </div>
 
       {blogs.length === 0 && (
-        <p className="rounded-md bg-white p-6 text-ink/60">
-          No blogs found.
-        </p>
+        <p className="rounded-md bg-white p-6 text-ink/60">No blogs found.</p>
       )}
 
-      {blogs.length >= 6 && (
-        <div className="flex items-center justify-center gap-3">
-          <button
-            className="btn-secondary cursor-pointer"
-            disabled={page <= 1}
-            onClick={() => setPage((value) => value - 1)}
-          >
-            Previous
-          </button>
+      <div className="mt-10 flex items-center justify-center gap-4">
+        <button
+          onClick={() => setPage((prev) => prev - 1)}
+          disabled={page === 1}
+          className={`rounded-lg border px-5 py-2 font-medium transition
+      ${
+        page === 1
+          ? "cursor-not-allowed opacity-50"
+          : "hover:bg-green-600 hover:text-white"
+      }`}
+        >
+          ← Previous
+        </button>
 
-          <span className="text-sm font-semibold">
-            Page {page} of {pages}
-          </span>
+        <span className="rounded-lg bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">
+          Page {page} of {pages}
+        </span>
 
-          <button
-            className="btn-secondary cursor-pointer"
-            disabled={page >= pages}
-            onClick={() => setPage((value) => value + 1)}
-          >
-            Next
-          </button>
-        </div>
-      )}
+        <button
+          onClick={() => setPage((prev) => prev + 1)}
+          disabled={page >= pages}
+          className={`rounded-lg border px-5 py-2 font-medium transition
+      ${
+        page >= pages
+          ? "cursor-not-allowed opacity-50"
+          : "hover:bg-green-600 hover:text-white"
+      }`}
+        >
+          Next →
+        </button>
+      </div>
     </section>
   );
 }
