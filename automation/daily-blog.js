@@ -2,7 +2,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { v2: cloudinary } = require("cloudinary");
-const { postToInstagram } = require("./instagram");
+const { postToInstagram, buildCaption } = require("./instagram");
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -18,14 +18,14 @@ cloudinary.config({
 async function fetchOrCreateCategory(categoryName) {
   const res = await axios.get(`${BLOG_API_URL}/api/categories`);
   const match = res.data.find(
-    (c) => c.name?.toLowerCase() === categoryName.toLowerCase()
+    (c) => c.name?.toLowerCase() === categoryName.toLowerCase(),
   );
   if (match) return match._id;
 
   const created = await axios.post(
     `${BLOG_API_URL}/api/categories`,
     { name: categoryName },
-    { headers: { Authorization: `Bearer ${BLOG_API_TOKEN}` } }
+    { headers: { Authorization: `Bearer ${BLOG_API_TOKEN}` } },
   );
   return created.data._id;
 }
@@ -69,16 +69,19 @@ async function fetchEnvironmentNews() {
   return [
     {
       title: "India's Climate Crisis: Rising Temperatures Threaten Millions",
-      description: "India faces unprecedented climate challenges in 2026 with record temperatures, erratic monsoons, and increasing extreme weather events affecting agriculture and public health."
+      description:
+        "India faces unprecedented climate challenges in 2026 with record temperatures, erratic monsoons, and increasing extreme weather events affecting agriculture and public health.",
     },
     {
       title: "Air Pollution in Indian Cities Reaches Critical Levels",
-      description: "Multiple Indian cities report dangerous AQI levels, prompting health advisories and calls for stricter emission controls across industrial and transport sectors."
+      description:
+        "Multiple Indian cities report dangerous AQI levels, prompting health advisories and calls for stricter emission controls across industrial and transport sectors.",
     },
     {
       title: "Solar Energy Expansion Accelerates Across Rural India",
-      description: "India's renewable energy push gains momentum as solar installations in rural areas provide clean electricity to millions previously dependent on diesel generators."
-    }
+      description:
+        "India's renewable energy push gains momentum as solar installations in rural areas provide clean electricity to millions previously dependent on diesel generators.",
+    },
   ];
 }
 
@@ -100,7 +103,9 @@ async function generateBlog(articles) {
     .join("\n\n");
 
   const today = new Date().toLocaleDateString("en-IN", {
-    day: "numeric", month: "long", year: "numeric"
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 
   const prompt = `
@@ -167,13 +172,12 @@ IMPORTANT JSON RULES:
 
       console.log(`✅ Blog: "${blog.title}"`);
       return blog;
-
     } catch (err) {
       console.error(`❌ Attempt ${attempts} failed: ${err.message}`);
       if (attempts === maxAttempts) {
         throw new Error(`Failed after ${maxAttempts} attempts: ${err.message}`);
       }
-      await new Promise(r => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, 3000));
     }
   }
 }
@@ -192,7 +196,7 @@ async function generateMultipleImages(blog) {
 
   const imageUrls = allPrompts.map((prompt, i) => {
     const encoded = encodeURIComponent(
-      `${prompt}, professional photography, 4k, high quality, realistic`
+      `${prompt}, professional photography, 4k, high quality, realistic`,
     );
     return `https://image.pollinations.ai/prompt/${encoded}?width=1200&height=630&nolog=true&seed=${Date.now() + i * 1000}`;
   });
@@ -221,7 +225,7 @@ async function uploadAllToCloudinary(imageUrls) {
         originalName: `ai-generated-${i + 1}.jpg`,
       });
       console.log(`  ✅ Image ${i + 1} uploaded`);
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
     } catch (err) {
       console.error(`  ❌ Image ${i + 1} failed: ${err.message}`);
     }
@@ -248,16 +252,12 @@ async function publishBlog(blogData, featuredImage, galleryImages) {
     status: "published",
   };
 
-  const res = await axios.post(
-    `${BLOG_API_URL}/api/blogs`,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${BLOG_API_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const res = await axios.post(`${BLOG_API_URL}/api/blogs`, payload, {
+    headers: {
+      Authorization: `Bearer ${BLOG_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+  });
 
   console.log(`✅ Published! Slug: ${res.data.slug}`);
   return res.data;
@@ -278,19 +278,33 @@ async function main() {
     const published = await publishBlog(blogData, featuredImage, galleryImages);
 
     // ✅ Instagram post — main() ke andar, publishBlog ke baad
-    const caption = `🌍 ${published.title}\n\n${published.excerpt}\n\n🔗 https://environment-warrior.vercel.app/blog/${published.slug}\n\n#EnvironmentWarrior #ClimateAction #Environment #India #Sustainability`;
+    const { postToInstagram, buildCaption } = require("./instagram");
 
-    await postToInstagram(featuredImage.url, caption);
+    // main() mein:
+    const blogUrl = `https://environment-warrior.vercel.app/blog/${published.slug}`;
+
+    // ✅ SEO optimized caption
+    const caption = buildCaption(
+      published.title,
+      published.excerpt,
+      blogUrl,
+      published.tags || [],
+    );
+
+    // ✅ Alt text for SEO
+    const altText = `${published.title} - Environment Warrior India`;
+
+    await postToInstagram(featuredImage.url, caption, altText);
     console.log("✅ Instagram post done!");
-
     console.log("");
     console.log("🎉 SUCCESS!");
     console.log("===========");
     console.log(`📝 Title:    ${published.title}`);
     console.log(`🖼️ Featured: ${featuredImage.url}`);
     console.log(`🎨 Gallery:  ${galleryImages.length} images`);
-    console.log(`🔗 URL:      https://environment-warrior.vercel.app/blog/${published.slug}`);
-
+    console.log(
+      `🔗 URL:      https://environment-warrior.vercel.app/blog/${published.slug}`,
+    );
   } catch (err) {
     console.error("❌ Error:", err.message);
     if (err.response?.data) {
