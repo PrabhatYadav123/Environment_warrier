@@ -2,6 +2,7 @@ require("dotenv").config();
 const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { v2: cloudinary } = require("cloudinary");
+const { postToInstagram } = require("./instagram");
 
 const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -280,6 +281,21 @@ async function publishBlog(blogData, featuredImage, galleryImages) {
   console.log(`✅ Published! Slug: ${res.data.slug}`);
   return res.data;
 }
+
+const caption = `
+🌍 ${published.title}
+
+Read the full article on Environment Warrior.
+
+🔗 https://environment-warrior.vercel.app/blog/${published.slug}
+
+#Environment #ClimateChange #India
+`;
+
+await postToInstagram(
+    featuredImage.url,
+    caption
+);
 
 // ✅ Main
 async function main() {

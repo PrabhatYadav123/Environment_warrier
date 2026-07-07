@@ -4,7 +4,6 @@ on:
   schedule:
     # 8:00 AM IST
     - cron: "30 2 * * *"
-
     # 6:00 PM IST
     - cron: "30 12 * * *"
 
@@ -39,12 +38,16 @@ jobs:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_BUSINESS_ID: ${{ secrets.INSTAGRAM_BUSINESS_ID }}
         run: |
           echo "GNEWS length=${#GNEWS_API_KEY}"
           echo "GEMINI length=${#GEMINI_API_KEY}"
           echo "BLOG_API_URL length=${#BLOG_API_URL}"
           echo "BLOG_API_TOKEN length=${#BLOG_API_TOKEN}"
           echo "CLOUDINARY_NAME length=${#CLOUDINARY_CLOUD_NAME}"
+          echo "INSTAGRAM_TOKEN length=${#INSTAGRAM_ACCESS_TOKEN}"
+          echo "INSTAGRAM_ID length=${#INSTAGRAM_BUSINESS_ID}"
 
       - name: Run Daily Blog Script
         env:
@@ -55,4 +58,6 @@ jobs:
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}  # ← Add
+          INSTAGRAM_BUSINESS_ID: ${{ secrets.INSTAGRAM_BUSINESS_ID }}    # ← Add
         run: node daily-blog.js
