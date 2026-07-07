@@ -102,7 +102,7 @@ useEffect(() => {
           name: "Environment Warrior",
           logo: {
             "@type": "ImageObject",
-            url: "https://environment-warrior.vercel.app/logo.png",
+            url: "https://environment-warrior.vercel.app/logo512.png",
           },
         },
 
