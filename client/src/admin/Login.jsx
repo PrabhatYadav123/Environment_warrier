@@ -1,4 +1,4 @@
-import { Leaf, Loader2 } from "lucide-react";
+import { Leaf, Loader2, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -19,7 +19,10 @@ export default function Login() {
       await login(email, password);
       navigate("/admin");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please check your credentials.");
+      setError(
+        err.response?.data?.message ||
+          "Login failed. Please check your credentials.",
+      );
     } finally {
       setLoading(false);
     }
@@ -28,6 +31,17 @@ export default function Login() {
   return (
     <main className="grid min-h-screen place-items-center bg-mist px-4">
       <div className="w-full max-w-md">
+        {/* Back Button */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-forest hover:text-green-700 transition-colors"
+          >
+            <ArrowLeft size={18} />
+            Back to Home
+          </button>
+        </div>
 
         {/* Logo & Title */}
         <div className="mb-6 text-center">
@@ -35,7 +49,9 @@ export default function Login() {
             <Leaf size={26} />
           </span>
           <h1 className="text-2xl font-black">Environment Warrior</h1>
-          <p className="text-sm text-ink/50 mt-1">Admin Portal — Authorized Access Only</p>
+          <p className="text-sm text-ink/50 mt-1">
+            Admin Portal — Authorized Access Only
+          </p>
         </div>
 
         {/* Form Card */}
@@ -45,7 +61,9 @@ export default function Login() {
         >
           <div>
             <h2 className="text-xl font-black">Welcome back 👋</h2>
-            <p className="text-sm text-ink/50 mt-0.5">Sign in to manage your content</p>
+            <p className="text-sm text-ink/50 mt-0.5">
+              Sign in to manage your content
+            </p>
           </div>
 
           {/* Email */}
@@ -103,7 +121,6 @@ export default function Login() {
             🔒 Secure admin access. Contact your administrator if you need help.
           </p>
         </form>
-
       </div>
     </main>
   );

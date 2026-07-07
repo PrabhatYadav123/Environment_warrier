@@ -1,4 +1,13 @@
-import { ArrowRight, Newspaper, Sprout, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Calendar,
+  Clock3,
+  Eye,
+  Heart,
+  Newspaper,
+  Sprout,
+  Users,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async"; // ← Add
@@ -11,6 +20,16 @@ export default function Home() {
   useEffect(() => {
     api.get("/blogs?limit=3").then(({ data }) => setBlogs(data.items)).catch(() => setBlogs([]));
   }, []);
+
+  const featuredBlog = blogs.length ? blogs[0] : null;
+const latestBlogs = blogs.slice(1);
+
+const formatDate = (date) =>
+  new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
   return (
     <>
@@ -37,60 +56,263 @@ export default function Home() {
         <link rel="canonical" href="https://environment-warrior.vercel.app/" />
       </Helmet>
 
-      <section className="bg-white">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-[1.1fr_0.9fr] md:items-center">
-          <div className="grid gap-6">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-forest">Environment Warrior Group</p>
-            <h1 className="max-w-3xl text-4xl font-black leading-tight text-ink md:text-6xl">
-              A CMS for climate stories, campaigns and community action.
-            </h1>
-            <p className="max-w-2xl text-lg leading-8 text-ink/70">
-              Publish blogs, photos, videos and audio updates from one simple admin panel.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/blogs" className="btn-primary">
-                Read Blogs <ArrowRight size={18} />
-              </Link>
-              <Link to="/admin" className="btn-secondary">
-                Open CMS
-              </Link>
+     <section
+  className="relative overflow-hidden bg-cover bg-center"
+  style={{
+    backgroundImage:
+      "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80')",
+  }}
+>
+  <div className="absolute inset-0 bg-black/65" />
+
+  <div className="relative mx-auto max-w-7xl px-6 py-24 lg:py-36">
+
+    <div className="max-w-3xl">
+
+      <span className="inline-flex items-center rounded-full bg-green-600/20 px-4 py-2 text-sm font-semibold text-green-300 backdrop-blur">
+        🌍 Together For A Greener Tomorrow
+      </span>
+
+      <h1 className="mt-6 text-5xl font-extrabold leading-tight text-white md:text-7xl">
+        Protect Nature.
+        <br />
+        Inspire Action.
+      </h1>
+
+      <p className="mt-8 text-lg leading-8 text-gray-200 md:text-xl">
+        Environment Warrior is a community dedicated to climate awareness,
+        conservation, sustainable living and environmental action.
+        Discover inspiring stories, campaigns and practical ideas that
+        help create a healthier planet.
+      </p>
+
+      <div className="mt-10 flex flex-wrap gap-4">
+
+        <Link
+          to="/blogs"
+          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-7 py-4 font-semibold text-white transition hover:bg-green-700"
+        >
+          Explore Blogs
+          <ArrowRight size={18} />
+        </Link>
+
+        <Link
+          to="/contact"
+          className="rounded-lg border border-white/40 px-7 py-4 font-semibold text-white backdrop-blur transition hover:bg-white hover:text-black"
+        >
+          Join Community
+        </Link>
+
+      </div>
+
+    </div>
+
+    <div className="mt-20 grid gap-6 md:grid-cols-4">
+
+      <div className="rounded-xl bg-white/10 p-6 backdrop-blur">
+        <h2 className="text-4xl font-bold text-white">500+</h2>
+        <p className="mt-2 text-green-200">
+          Environmental Blogs
+        </p>
+      </div>
+
+      <div className="rounded-xl bg-white/10 p-6 backdrop-blur">
+        <h2 className="text-4xl font-bold text-white">50+</h2>
+        <p className="mt-2 text-green-200">
+          Awareness Campaigns
+        </p>
+      </div>
+
+      <div className="rounded-xl bg-white/10 p-6 backdrop-blur">
+        <h2 className="text-4xl font-bold text-white">10K+</h2>
+        <p className="mt-2 text-green-200">
+          Monthly Readers
+        </p>
+      </div>
+
+      <div className="rounded-xl bg-white/10 p-6 backdrop-blur">
+        <h2 className="text-4xl font-bold text-white">100+</h2>
+        <p className="mt-2 text-green-200">
+          Volunteers
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+    <section className="bg-gray-50 py-20">
+  <div className="mx-auto max-w-7xl px-6">
+
+    <div className="mb-14 flex items-end justify-between">
+
+      <div>
+
+        <p className="text-sm font-bold uppercase tracking-widest text-green-600">
+          Latest Articles
+        </p>
+
+        <h2 className="mt-2 text-4xl font-extrabold text-gray-900">
+          Environmental Stories
+        </h2>
+
+      </div>
+
+      <Link
+        to="/blogs"
+        className="rounded-lg border px-5 py-3 font-semibold transition hover:bg-green-600 hover:text-white"
+      >
+        View All
+      </Link>
+
+    </div>
+
+    {featuredBlog && (
+      <Link
+        to={`/blogs/${featuredBlog.slug}`}
+        className="group mb-14 grid overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-2xl lg:grid-cols-2"
+      >
+        <div className="overflow-hidden">
+
+          <img
+            src={featuredBlog.featuredImage?.url}
+            alt={featuredBlog.title}
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+          />
+
+        </div>
+
+        <div className="flex flex-col justify-center p-10">
+
+          <span className="mb-4 inline-block rounded-full bg-green-100 px-4 py-2 text-sm font-bold text-green-700">
+            🌍 Featured Story
+          </span>
+
+          <h3 className="text-4xl font-black text-gray-900">
+            {featuredBlog.title}
+          </h3>
+
+          <p className="mt-6 line-clamp-4 text-lg leading-8 text-gray-600">
+            {featuredBlog.excerpt}
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-6 text-sm text-gray-500">
+
+            <span className="flex items-center gap-2">
+              <Calendar size={16} />
+              {formatDate(featuredBlog.createdAt)}
+            </span>
+
+            <span className="flex items-center gap-2">
+              <Clock3 size={16} />
+              {featuredBlog.readingTime || 5} min
+            </span>
+
+            <span className="flex items-center gap-2">
+              <Eye size={16} />
+              {featuredBlog.views || 0}
+            </span>
+
+            <span className="flex items-center gap-2">
+              <Heart size={16} />
+              {featuredBlog.likes || 0}
+            </span>
+
+          </div>
+
+          <div className="mt-8 flex items-center gap-2 font-semibold text-green-700">
+            Read Full Story
+            <ArrowRight size={18} />
+          </div>
+
+        </div>
+      </Link>
+    )}
+
+    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+
+      {latestBlogs.map((blog) => (
+
+        <Link
+          key={blog._id}
+          to={`/blogs/${blog.slug}`}
+          className="group overflow-hidden rounded-2xl bg-white shadow transition hover:-translate-y-2 hover:shadow-xl"
+        >
+
+          <div className="overflow-hidden">
+
+            <img
+              src={blog.featuredImage?.url}
+              alt={blog.title}
+              className="h-60 w-full object-cover transition duration-500 group-hover:scale-110"
+            />
+
+          </div>
+
+          <div className="p-6">
+
+            <div className="mb-3 flex items-center justify-between">
+
+              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                {blog.category?.name || "Environment"}
+              </span>
+
+              <span className="text-xs text-gray-500">
+                {formatDate(blog.createdAt)}
+              </span>
+
             </div>
+
+            <h3 className="line-clamp-2 text-xl font-bold text-gray-900 transition group-hover:text-green-700">
+              {blog.title}
+            </h3>
+
+            <p className="mt-3 line-clamp-3 text-gray-600">
+              {blog.excerpt}
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-4 text-sm text-gray-500">
+
+              <span className="flex items-center gap-1">
+                <Clock3 size={15} />
+                {blog.readingTime || 5} min
+              </span>
+
+              <span className="flex items-center gap-1">
+                <Eye size={15} />
+                {blog.views || 0}
+              </span>
+
+              <span className="flex items-center gap-1">
+                <Heart size={15} />
+                {blog.likes || 0}
+              </span>
+
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+
+              <span className="text-sm text-gray-500">
+                By {blog.author?.name || "Environment Warrior"}
+              </span>
+
+              <span className="flex items-center gap-2 font-semibold text-green-700">
+                Read
+                <ArrowRight size={16} />
+              </span>
+
+            </div>
+
           </div>
-          <div className="grid gap-4 rounded-md border border-ink/10 bg-mist p-5 shadow-soft">
-            {[
-              [Sprout, "Conservation", "Guides and field updates for practical change."],
-              [Users, "Community", "Volunteer stories, events and cleanup drives."],
-              [Newspaper, "Publishing", "Rich posts with images, video and audio."]
-            ].map(([Icon, title, text]) => (
-              <div key={title} className="flex gap-4 rounded-md bg-white p-4">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-forest text-white">
-                  <Icon size={22} />
-                </span>
-                <div>
-                  <h2 className="font-black">{title}</h2>
-                  <p className="text-sm leading-6 text-ink/65">{text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section className="mx-auto max-w-7xl px-4 py-12">
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-forest">Featured</p>
-            <h2 className="text-3xl font-black">Latest Stories</h2>
-          </div>
-          <Link to="/blogs" className="btn-secondary">
-            View all
-          </Link>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {blogs.map((blog) => (
-            <BlogCard key={blog._id} blog={blog} />
-          ))}
-        </div>
-      </section>
+
+        </Link>
+
+      ))}
+
+    </div>
+
+  </div>
+</section>
     </>
   );
 }
