@@ -34,31 +34,54 @@ async function fetchOrCreateCategory(categoryName) {
 async function fetchEnvironmentNews() {
   console.log("📰 Fetching environment news...");
 
-  // Random topics rotate karo — variety ke liye
   const topics = [
     "climate change India 2026",
-    "air pollution health impact India",
+    "air pollution India",
     "renewable energy solar India",
     "deforestation wildlife India",
-    "water crisis India 2026",
-    "plastic pollution ocean India",
-    "flood drought India climate",
-    "electric vehicles India green",
+    "water conservation India",
+    "plastic pollution ocean",
+    "flood drought India",
+    "electric vehicles India",
   ];
+
   const randomTopic = topics[Math.floor(Math.random() * topics.length)];
   console.log(`Topic: ${randomTopic}`);
 
-  const res = await axios.get("https://gnews.io/api/v4/search", {
-    params: {
-      q: randomTopic,
-      lang: "en",
-      max: 7,
-      apikey: GNEWS_API_KEY,
-    },
-  });
+  try {
+    const res = await axios.get("https://gnews.io/api/v4/search", {
+      params: {
+        q: randomTopic,
+        lang: "en",
+        max: 7,
+        apikey: GNEWS_API_KEY,
+      },
+    });
 
-  console.log(`Found ${res.data.articles.length} articles`);
-  return res.data.articles;
+    if (res.data.articles?.length > 0) {
+      console.log(`Found ${res.data.articles.length} articles`);
+      return res.data.articles;
+    }
+  } catch (err) {
+    console.log(`GNews failed: ${err.message}`);
+  }
+
+  // ✅ Fallback — GNews fail ho toh hardcoded context use karo
+  console.log("⚠️ Using fallback news context...");
+  return [
+    {
+      title: "India's Climate Crisis: Rising Temperatures Threaten Millions",
+      description: "India faces unprecedented climate challenges in 2026 with record temperatures, erratic monsoons, and increasing extreme weather events affecting agriculture and public health."
+    },
+    {
+      title: "Air Pollution in Indian Cities Reaches Critical Levels",
+      description: "Multiple Indian cities report dangerous AQI levels, prompting health advisories and calls for stricter emission controls across industrial and transport sectors."
+    },
+    {
+      title: "Solar Energy Expansion Accelerates Across Rural India",
+      description: "India's renewable energy push gains momentum as solar installations in rural areas provide clean electricity to millions previously dependent on diesel generators."
+    }
+  ];
 }
 
 // ✅ Step 2: Blog generate
@@ -69,14 +92,13 @@ async function generateBlog(articles) {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: {
-      temperature: 0.8,
-      topP: 0.9,
+      temperature: 0.7,
       maxOutputTokens: 8192,
     },
   });
 
   const newsContext = articles
-    .map((a, i) => `${i + 1}. Title: ${a.title}\n   Description: ${a.description}\n   Source: ${a.source?.name || "Unknown"}`)
+    .map((a, i) => `${i + 1}. ${a.title}\n   ${a.description}`)
     .join("\n\n");
 
   const today = new Date().toLocaleDateString("en-IN", {
@@ -84,104 +106,84 @@ async function generateBlog(articles) {
   });
 
   const prompt = `
-You are an award-winning environmental journalist writing for "Environment Warrior" — India's leading environmental awareness platform.
+You are an expert environmental journalist writing for "Environment Warrior" — India's top environmental platform.
 
-Today is ${today}. Here are the latest news articles:
+Today is ${today}.
 
+NEWS CONTEXT:
 ${newsContext}
 
-TASK: Select the SINGLE most impactful environmental story and write a world-class long-form blog article.
+Write a professional 2000-word environmental blog article about the most important topic from above.
 
-═══════════════════════════════════════
-CONTENT REQUIREMENTS
-═══════════════════════════════════════
-
-LENGTH: 2000-2500 words
-TONE: Authoritative yet accessible — like BBC Environment + National Geographic combined
-STYLE: Human, emotional, fact-based, storytelling
-AUDIENCE: Educated Indians who care about environment
-UNIQUE ANGLE: Always connect global issues to India specifically
-
-QUALITY CHECKLIST:
-✅ Original insights — not just rephrasing the news
-✅ Real statistics only — no hallucinated numbers
-✅ Strong narrative arc — beginning, middle, end
-✅ Local Indian context wherever possible
-✅ Actionable takeaways for Indian readers
-✅ Natural keyword integration — not forced
-✅ Active voice throughout
-✅ Short paragraphs — 2-4 lines max
-✅ Smooth transitions between sections
-✅ No repetition of sentences or ideas
-
-═══════════════════════════════════════
-SEO REQUIREMENTS
-═══════════════════════════════════════
-
-TITLE: 50-65 characters, emotional, curiosity-driving
-SUBTITLE: 80-120 characters, expands on title
-EXCERPT: 150-160 characters, meta description quality
-TAGS: 5 specific long-tail SEO keywords
-
-═══════════════════════════════════════
-STRUCTURE (use these exact H2 headings)
-═══════════════════════════════════════
-
-## The Crisis No One Is Talking About
-## What Is Actually Happening
-## Why This Matters for India
-## The Science Behind It
-## The Human Cost
-## Economic Consequences
-## Global Response
-## What India Must Do
-## How You Can Make a Difference
-## The Road Ahead
-
-═══════════════════════════════════════
-OUTPUT FORMAT
-═══════════════════════════════════════
-
-Return ONLY valid JSON. No markdown fences. No explanation. No extra text.
+CRITICAL: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. Start with { and end with }.
 
 {
-  "title": "",
-  "subtitle": "",
-  "excerpt": "",
-  "content": "",
-  "category": "",
-  "tags": ["", "", "", "", ""],
+  "title": "50-65 character SEO title",
+  "subtitle": "80-120 character subtitle",
+  "excerpt": "150-160 character meta description",
+  "content": "Full 2000 word markdown article with ## headings",
+  "category": "Climate Change",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "difficulty": "Intermediate",
-  "coverImagePrompt": ""
+  "coverImagePrompt": "15-20 word National Geographic style photo description"
 }
 
-FIELD RULES:
-- title: 50-65 chars, SEO optimized, emotional hook
-- subtitle: 80-120 chars, supports the title
-- excerpt: 150-160 chars EXACTLY, no more
-- content: 2000-2500 words, markdown, all 10 sections filled
-- category: ONE of these only: Climate Change, Air Pollution, Water Crisis, Deforestation, Renewable Energy, Wildlife, Ocean Conservation, Sustainable Living
-- tags: exactly 5 lowercase strings, long-tail SEO keywords
-- difficulty: Beginner OR Intermediate OR Advanced
-- coverImagePrompt: 15-20 words, National Geographic style photo description
+IMPORTANT JSON RULES:
+- No newlines inside string values — use \\n instead
+- No unescaped quotes inside strings
+- No trailing commas
+- Content must be valid JSON string
+- Escape all special characters properly
 `;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  let attempts = 0;
+  const maxAttempts = 3;
 
-  // JSON clean karo
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Invalid JSON from Gemini");
+  while (attempts < maxAttempts) {
+    attempts++;
+    console.log(`Attempt ${attempts}/${maxAttempts}...`);
 
-  // Clean control characters
-  const cleanJson = jsonMatch[0]
-    .replace(/[\x00-\x1F\x7F]/g, " ")
-    .replace(/\n/g, "\\n");
+    try {
+      const result = await model.generateContent(prompt);
+      let text = result.response.text().trim();
 
-  const blog = JSON.parse(cleanJson);
-  console.log(`✅ Blog: "${blog.title}"`);
-  console.log(`   Words: ~${blog.content.split(" ").length}`);
-  return blog;
+      // Clean karo
+      text = text
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+
+      // JSON extract karo
+      const startIndex = text.indexOf("{");
+      const endIndex = text.lastIndexOf("}");
+
+      if (startIndex === -1 || endIndex === -1) {
+        throw new Error("No JSON found in response");
+      }
+
+      const jsonStr = text.substring(startIndex, endIndex + 1);
+
+      // Parse karo
+      const blog = JSON.parse(jsonStr);
+
+      // Validate karo
+      if (!blog.title || !blog.content || !blog.excerpt) {
+        throw new Error("Missing required fields");
+      }
+
+      console.log(`✅ Blog: "${blog.title}"`);
+      return blog;
+
+    } catch (err) {
+      console.error(`❌ Attempt ${attempts} failed: ${err.message}`);
+      if (attempts === maxAttempts) {
+        throw new Error(`Failed after ${maxAttempts} attempts: ${err.message}`);
+      }
+      // Wait karke retry karo
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
 }
 
 // ✅ Step 3: Multiple images generate karo
