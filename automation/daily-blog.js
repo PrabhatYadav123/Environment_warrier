@@ -15,7 +15,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Category fetch or create
 async function fetchOrCreateCategory(categoryName) {
   const res = await axios.get(`${BLOG_API_URL}/api/categories`);
   const match = res.data.find(
@@ -31,7 +30,6 @@ async function fetchOrCreateCategory(categoryName) {
   return created.data._id;
 }
 
-// ✅ Step 1: News fetch
 async function fetchEnvironmentNews() {
   console.log("📰 Fetching environment news...");
 
@@ -67,7 +65,6 @@ async function fetchEnvironmentNews() {
     console.log(`GNews failed: ${err.message}`);
   }
 
-  // ✅ Fallback — GNews fail ho toh hardcoded context use karo
   console.log("⚠️ Using fallback news context...");
   return [
     {
@@ -85,19 +82,18 @@ async function fetchEnvironmentNews() {
   ];
 }
 
-// ✅ Step 2: Blog generate
 async function generateBlog(articles) {
   console.log("✍️ Generating blog with Gemini...");
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
- const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-  generationConfig: {
-    temperature: 0.7,
-    responseMimeType: "application/json",
-    maxOutputTokens: 8192,
-  },
-});
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: {
+      temperature: 0.7,
+      responseMimeType: "application/json",
+      maxOutputTokens: 8192,
+    },
+  });
 
   const newsContext = articles
     .map((a, i) => `${i + 1}. ${a.title}\n   ${a.description}`)
@@ -149,14 +145,12 @@ IMPORTANT JSON RULES:
       const result = await model.generateContent(prompt);
       let text = result.response.text().trim();
 
-      // Clean karo
       text = text
         .replace(/^```json\s*/i, "")
         .replace(/^```\s*/i, "")
         .replace(/\s*```$/i, "")
         .trim();
 
-      // JSON extract karo
       const startIndex = text.indexOf("{");
       const endIndex = text.lastIndexOf("}");
 
@@ -165,11 +159,8 @@ IMPORTANT JSON RULES:
       }
 
       const jsonStr = text.substring(startIndex, endIndex + 1);
-
-      // Parse karo
       const blog = JSON.parse(jsonStr);
 
-      // Validate karo
       if (!blog.title || !blog.content || !blog.excerpt) {
         throw new Error("Missing required fields");
       }
@@ -182,20 +173,15 @@ IMPORTANT JSON RULES:
       if (attempts === maxAttempts) {
         throw new Error(`Failed after ${maxAttempts} attempts: ${err.message}`);
       }
-      // Wait karke retry karo
       await new Promise(r => setTimeout(r, 3000));
     }
   }
 }
 
-// ✅ Step 3: Multiple images generate karo
 async function generateMultipleImages(blog) {
   console.log("🖼️ Generating multiple images...");
 
-  // Featured image ke liye main prompt
   const featuredPrompt = blog.coverImagePrompt;
-
-  // Gallery ke liye alag alag prompts
   const galleryPrompts = [
     `${blog.tags[0]} environmental impact India aerial view photography`,
     `${blog.tags[1]} community action people working together outdoors`,
@@ -208,7 +194,6 @@ async function generateMultipleImages(blog) {
     const encoded = encodeURIComponent(
       `${prompt}, professional photography, 4k, high quality, realistic`
     );
-    // Alag seed se alag image milegi
     return `https://image.pollinations.ai/prompt/${encoded}?width=1200&height=630&nolog=true&seed=${Date.now() + i * 1000}`;
   });
 
@@ -216,7 +201,6 @@ async function generateMultipleImages(blog) {
   return imageUrls;
 }
 
-// ✅ Step 4: Upload all images to Cloudinary
 async function uploadAllToCloudinary(imageUrls) {
   console.log("☁️ Uploading all images to Cloudinary...");
 
@@ -237,17 +221,14 @@ async function uploadAllToCloudinary(imageUrls) {
         originalName: `ai-generated-${i + 1}.jpg`,
       });
       console.log(`  ✅ Image ${i + 1} uploaded`);
-
-      // Rate limit avoid karne ke liye
       await new Promise(r => setTimeout(r, 2000));
-
     } catch (err) {
-      console.error(`  ❌ Image ${i + 1} failed: ${err.message}`)
+      console.error(`  ❌ Image ${i + 1} failed: ${err.message}`);
     }
   }
 
-  console.log(`✅ ${uploaded.length} images uploaded to Cloudinary`)
-  return uploaded
+  console.log(`✅ ${uploaded.length} images uploaded to Cloudinary`);
+  return uploaded;
 }
 
 async function publishBlog(blogData, featuredImage, galleryImages) {
@@ -262,8 +243,8 @@ async function publishBlog(blogData, featuredImage, galleryImages) {
     category: categoryId,
     tags: blogData.tags,
     difficulty: blogData.difficulty,
-    featuredImage: featuredImage,         // ← Pehli image
-    galleryImages: galleryImages,          // ← Baaki 3 images
+    featuredImage: featuredImage,
+    galleryImages: galleryImages,
     status: "published",
   };
 
@@ -282,22 +263,7 @@ async function publishBlog(blogData, featuredImage, galleryImages) {
   return res.data;
 }
 
-const caption = `
-🌍 ${published.title}
-
-Read the full article on Environment Warrior.
-
-🔗 https://environment-warrior.vercel.app/blog/${published.slug}
-
-#Environment #ClimateChange #India
-`;
-
-await postToInstagram(
-    featuredImage.url,
-    caption
-);
-
-// ✅ Main
+// ✅ Main — Instagram integration sahi jagah pe
 async function main() {
   console.log("🌍 Environment Warrior — Auto Blog Generator");
   console.log("==========================================");
@@ -305,18 +271,17 @@ async function main() {
   try {
     const articles = await fetchEnvironmentNews();
     const blogData = await generateBlog(articles);
-
-    // Multiple images generate karo
     const imageUrls = await generateMultipleImages(blogData);
-
-    // Sab Cloudinary pe upload karo
     const uploadedImages = await uploadAllToCloudinary(imageUrls);
-
-    // Pehli = featured, baaki = gallery
     const featuredImage = uploadedImages[0];
-    const galleryImages = uploadedImages.slice(1); // [1, 2, 3]
-
+    const galleryImages = uploadedImages.slice(1);
     const published = await publishBlog(blogData, featuredImage, galleryImages);
+
+    // ✅ Instagram post — main() ke andar, publishBlog ke baad
+    const caption = `🌍 ${published.title}\n\n${published.excerpt}\n\n🔗 https://environment-warrior.vercel.app/blog/${published.slug}\n\n#EnvironmentWarrior #ClimateAction #Environment #India #Sustainability`;
+
+    await postToInstagram(featuredImage.url, caption);
+    console.log("✅ Instagram post done!");
 
     console.log("");
     console.log("🎉 SUCCESS!");
@@ -324,7 +289,7 @@ async function main() {
     console.log(`📝 Title:    ${published.title}`);
     console.log(`🖼️ Featured: ${featuredImage.url}`);
     console.log(`🎨 Gallery:  ${galleryImages.length} images`);
-    console.log(`🔗 URL:      ${BLOG_API_URL}/blog/${published.slug}`);
+    console.log(`🔗 URL:      https://environment-warrior.vercel.app/blog/${published.slug}`);
 
   } catch (err) {
     console.error("❌ Error:", err.message);
