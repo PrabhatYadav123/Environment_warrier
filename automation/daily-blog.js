@@ -294,7 +294,12 @@ async function main() {
     // ✅ Alt text for SEO
     const altText = `${published.title} - Environment Warrior India`;
 
-    await postToInstagram(featuredImage.url, caption, altText);
+  await postToInstagram(
+  featuredImage.url,    // Featured image
+  caption,              // Caption
+  altText,              // Alt text
+  galleryImages         // Gallery images array ← Add this!
+);
     console.log("✅ Instagram post done!");
     console.log("");
     console.log("🎉 SUCCESS!");
