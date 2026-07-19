@@ -208,8 +208,12 @@ async function generateMultipleImages(blog) {
     const encoded = encodeURIComponent(
       `${prompt}, professional photography, 4k, high quality, realistic`,
     );
+    // pollinations.ai requires seed <= 2147483647 (signed 32-bit int).
+    // Date.now() alone is a 13-digit ms timestamp and exceeds this, so we
+    // fold it down into range instead of using it raw.
+    const seed = (Date.now() + i * 1000) % 2147483647;
     return {
-      primaryUrl: `https://image.pollinations.ai/prompt/${encoded}?width=1200&height=630&nolog=true&seed=${Date.now() + i * 1000}`,
+      primaryUrl: `https://image.pollinations.ai/prompt/${encoded}?width=1200&height=630&nolog=true&seed=${seed}`,
       keyword: keywords[i],
     };
   });
