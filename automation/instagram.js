@@ -197,7 +197,9 @@ async function postToInstagram(featuredImageUrl, caption, altText = "", galleryI
   await verifyInstagramConnection();
 
   // Sab images combine karo — featured + gallery
-  const allImages = [featuredImageUrl, ...galleryImages.map(img => img.url || img)].slice(0, 10); // Max 10
+  const allImages = [featuredImageUrl, ...galleryImages.map(img => img.url || img)]
+    .filter(Boolean)
+    .slice(0, 10); // Meta supports at most 10 carousel items.
 
   console.log(`  Total images: ${allImages.length}`);
 
@@ -213,7 +215,7 @@ async function postToInstagram(featuredImageUrl, caption, altText = "", galleryI
 
   // Multiple images — carousel banao
   console.log("  Creating carousel items...");
-  const childIds = [];
+  const childItems = [];
 
   for (let i = 0; i < allImages.length; i++) {
     console.log(`  Creating item ${i + 1}/${allImages.length}...`);
@@ -223,7 +225,7 @@ async function postToInstagram(featuredImageUrl, caption, altText = "", galleryI
         `${altText} - Image ${i + 1}`
       );
       await waitUntilReady(childId);
-      childIds.push(childId);
+      childItems.push({ id: childId, imageUrl: allImages[i] });
       console.log(`  ✅ Item ${i + 1} ready`);
       await new Promise(r => setTimeout(r, 1000));
     } catch (err) {
@@ -231,13 +233,24 @@ async function postToInstagram(featuredImageUrl, caption, altText = "", galleryI
     }
   }
 
-  if (childIds.length === 0) {
+  if (childItems.length === 0) {
     throw new Error("No carousel items created!");
   }
 
+  // Meta requires 2–10 items in a carousel. If only one image made it through
+  // processing, publish that successful image as a normal post instead.
+  if (childItems.length === 1) {
+    console.warn("  ⚠️ Only one carousel item succeeded; publishing it as a single image post.");
+    const containerId = await createMediaContainer(childItems[0].imageUrl, caption, altText);
+    await waitUntilReady(containerId);
+    const mediaId = await publishMedia(containerId);
+    console.log(`✅ Instagram Published: ${mediaId}`);
+    return mediaId;
+  }
+
   // Carousel container banao
-  console.log(`  Creating carousel with ${childIds.length} images...`);
-  const carouselId = await createCarouselContainer(childIds, caption);
+  console.log(`  Creating carousel with ${childItems.length} images...`);
+  const carouselId = await createCarouselContainer(childItems.map((item) => item.id), caption);
   await waitUntilReady(carouselId);
 
   // Publish karo

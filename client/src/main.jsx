@@ -1,30 +1,39 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async"; // ← Add
 import "./styles.css";
 import App from "./App.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
-import AdminLayout from "./admin/AdminLayout.jsx";
-import BlogForm from "./admin/BlogForm.jsx";
-import Categories from "./admin/Categories.jsx";
-import Dashboard from "./admin/Dashboard.jsx";
-import Login from "./admin/Login.jsx";
-import ManageBlogs from "./admin/ManageBlogs.jsx";
-import Profile from "./admin/Profile.jsx";
-import Users from "./admin/Users.jsx";
-import About from "./pages/About.jsx";
-import BlogDetail from "./pages/BlogDetail.jsx";
-import Blogs from "./pages/Blogs.jsx";
-import Contact from "./pages/Contact.jsx";
-import Gallery from "./pages/Gallery.jsx";
-import Home from "./pages/Home.jsx";
-import Videos from "./pages/Videos.jsx";
-import Contacts from "./admin/Contacts.jsx"; 
+
+const AdminLayout = lazy(() => import("./admin/AdminLayout.jsx"));
+const BlogForm = lazy(() => import("./admin/BlogForm.jsx"));
+const Categories = lazy(() => import("./admin/Categories.jsx"));
+const Dashboard = lazy(() => import("./admin/Dashboard.jsx"));
+const Login = lazy(() => import("./admin/Login.jsx"));
+const ManageBlogs = lazy(() => import("./admin/ManageBlogs.jsx"));
+const Profile = lazy(() => import("./admin/Profile.jsx"));
+const Users = lazy(() => import("./admin/Users.jsx"));
+const Contacts = lazy(() => import("./admin/Contacts.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
+const BlogDetail = lazy(() => import("./pages/BlogDetail.jsx"));
+const Blogs = lazy(() => import("./pages/Blogs.jsx"));
+const Contact = lazy(() => import("./pages/Contact.jsx"));
+const Gallery = lazy(() => import("./pages/Gallery.jsx"));
+const Home = lazy(() => import("./pages/Home.jsx"));
+const Videos = lazy(() => import("./pages/Videos.jsx"));
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
   return token ? children : <Navigate to="/admin/login" replace />;
+}
+
+function Page({ component: Component }) {
+  return (
+    <Suspense fallback={<main className="mx-auto max-w-4xl px-4 py-12">Loading…</main>}>
+      <Component />
+    </Suspense>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -34,31 +43,31 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <AuthProvider>
           <Routes>
             <Route element={<App />}>
-              <Route index element={<Home />} />
-              <Route path="about" element={<About />} />
-              <Route path="blogs" element={<Blogs />} />
-              <Route path="blog/:slug" element={<BlogDetail />} />
-              <Route path="gallery" element={<Gallery />} />
-              <Route path="videos" element={<Videos />} />
-              <Route path="contact" element={<Contact />} />
+              <Route index element={<Page component={Home} />} />
+              <Route path="about" element={<Page component={About} />} />
+              <Route path="blogs" element={<Page component={Blogs} />} />
+              <Route path="blog/:slug" element={<Page component={BlogDetail} />} />
+              <Route path="gallery" element={<Page component={Gallery} />} />
+              <Route path="videos" element={<Page component={Videos} />} />
+              <Route path="contact" element={<Page component={Contact} />} />
             </Route>
-            <Route path="/admin/login" element={<Login />} />
+            <Route path="/admin/login" element={<Page component={Login} />} />
             <Route
               path="/admin"
               element={
                 <ProtectedRoute>
-                  <AdminLayout />
+                  <Page component={AdminLayout} />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Dashboard />} />
-              <Route path="blogs" element={<ManageBlogs />} />
-              <Route path="blogs/new" element={<BlogForm />} />
-              <Route path="blogs/:id/edit" element={<BlogForm />} />
-              <Route path="categories" element={<Categories />} />
-              <Route path="users" element={<Users />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="contacts" element={<Contacts />} />
+              <Route index element={<Page component={Dashboard} />} />
+              <Route path="blogs" element={<Page component={ManageBlogs} />} />
+              <Route path="blogs/new" element={<Page component={BlogForm} />} />
+              <Route path="blogs/:id/edit" element={<Page component={BlogForm} />} />
+              <Route path="categories" element={<Page component={Categories} />} />
+              <Route path="users" element={<Page component={Users} />} />
+              <Route path="profile" element={<Page component={Profile} />} />
+              <Route path="contacts" element={<Page component={Contacts} />} />
             </Route>
           </Routes>
         </AuthProvider>

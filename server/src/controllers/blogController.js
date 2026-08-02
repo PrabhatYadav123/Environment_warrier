@@ -8,15 +8,20 @@ const populate = [
   { path: "category", select: "name slug" }
 ];
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function buildQuery(req, includeDrafts = false) {
   const query = includeDrafts ? {} : { status: "published" };
 
   if (req.query.search) {
+    const search = escapeRegex(req.query.search).slice(0, 100);
     query.$or = [
-      { title: { $regex: req.query.search, $options: "i" } },
-      { subtitle: { $regex: req.query.search, $options: "i" } },
-      { excerpt: { $regex: req.query.search, $options: "i" } },
-      { tags: { $regex: req.query.search, $options: "i" } }
+      { title: { $regex: search, $options: "i" } },
+      { subtitle: { $regex: search, $options: "i" } },
+      { excerpt: { $regex: search, $options: "i" } },
+      { tags: { $regex: search, $options: "i" } }
     ];
   }
 
@@ -112,8 +117,8 @@ function parseKeepGalleryImages(value) {
 }
 
 export const listBlogs = asyncHandler(async (req, res) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 9;
+  const page = Math.max(1, Math.floor(Number(req.query.page) || 1));
+  const limit = Math.min(50, Math.max(1, Math.floor(Number(req.query.limit) || 9)));
   const query = buildQuery(req, req.query.includeDrafts === "true");
 
   const [items, total] = await Promise.all([

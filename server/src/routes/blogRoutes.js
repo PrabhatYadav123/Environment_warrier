@@ -12,6 +12,7 @@ import {
 } from "../controllers/blogController.js";
 import { adminOnly, protect } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
+import { engagementLimiter } from "../middleware/rateLimit.js";
 
 const router = express.Router();
 const blogUpload = upload.fields([
@@ -28,7 +29,7 @@ router.get("/:slug", getBlog);
 router.post("/", protect, adminOnly, blogUpload, createBlog);
 router.put("/:id", protect, adminOnly, blogUpload, updateBlog);
 router.delete("/:id", protect, adminOnly, deleteBlog);
-router.post("/:id/view", addView);
-router.post("/:id/like", likeBlog);
+router.post("/:id/view", engagementLimiter, addView);
+router.post("/:id/like", engagementLimiter, likeBlog);
 
 export default router;

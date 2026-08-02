@@ -7,6 +7,7 @@ import { formatDate, shareBlog } from "../utils/format";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 export default function BlogDetail() {
   const { slug } = useParams();
@@ -251,7 +252,7 @@ useEffect(() => {
         <hr className="my-10 border-gray-200" />
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw]}
+          rehypePlugins={[rehypeRaw, rehypeSanitize]}
           className="prose prose-lg lg:prose-xl max-w-none
     prose-headings:font-bold
     prose-headings:text-gray-900

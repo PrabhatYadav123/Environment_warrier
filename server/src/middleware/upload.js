@@ -14,7 +14,26 @@ const localDiskStorage = multer.diskStorage({
   }
 });
 
+const allowedMimeTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "video/webm",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/ogg"
+]);
+
 export const upload = multer({
   storage: localDiskStorage,
-  limits: { fileSize: 60 * 1024 * 1024 }
+  limits: { fileSize: 60 * 1024 * 1024, files: 10 },
+  fileFilter: (_req, file, cb) => {
+    if (!allowedMimeTypes.has(file.mimetype)) {
+      cb(new Error("Unsupported file type."));
+      return;
+    }
+    cb(null, true);
+  }
 });

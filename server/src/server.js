@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { connectDb } from "./config/db.js";
 import { errorHandler, notFound } from "./middleware/error.js";
+import { apiLimiter } from "./middleware/rateLimit.js";
 import authRoutes from "./routes/authRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -26,6 +27,7 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
+app.use("/api", apiLimiter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "environment-warrior-api" });

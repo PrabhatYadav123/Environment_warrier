@@ -9,6 +9,11 @@ export const submitContact = asyncHandler(async (req, res) => {
     throw new Error("Name, email and message are required");
   }
 
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400);
+    throw new Error("Please provide a valid email address");
+  }
+
   const contact = await Contact.create({ name, email, subject, message })
   res.status(201).json({ message: "Thanks for reaching out. We will reply soon.", contact })
 })

@@ -9,10 +9,11 @@ import {
   updateUser
 } from "../controllers/authController.js";
 import { protect, superAdminOnly } from "../middleware/auth.js";
+import { authLimiter } from "../middleware/rateLimit.js";
 
 const router = express.Router();
 
-router.post("/login", login);
+router.post("/login", authLimiter, login);
 router.get("/me", protect, getProfile);
 router.put("/me", protect, updateProfile);
 router.get("/users", protect, superAdminOnly, listUsers);
