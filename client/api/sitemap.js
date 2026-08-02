@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       .sort({ updatedAt: -1 })
       .lean();
 
-    const baseUrl = "https://environment-warrior.vercel.app";
+    const baseUrl = "https://environmentwarrior.in";
 
     const staticPages = [
       { url: "/", changefreq: "daily", priority: "1.0" },

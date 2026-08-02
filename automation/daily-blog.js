@@ -356,7 +356,7 @@ async function main() {
       console.log("===========");
       console.log(`📝 Title: ${published.title}`);
       console.log(
-        `🔗 URL:   https://environment-warrior.vercel.app/blog/${published.slug}`,
+        `🔗 URL:   https://environmentwarrior.in/blog/${published.slug}`,
       );
       return;
     }
@@ -365,7 +365,7 @@ async function main() {
     // (postToInstagram, buildCaption already imported at top of file)
 
     // main() mein:
-    const blogUrl = `https://environment-warrior.vercel.app/blog/${published.slug}`;
+    const blogUrl = `https://environmentwarrior.in/blog/${published.slug}`;
 
     // ✅ SEO optimized caption
     const caption = buildCaption(
@@ -392,7 +392,7 @@ async function main() {
     console.log(`🖼️ Featured: ${featuredImage.url}`);
     console.log(`🎨 Gallery:  ${galleryImages.length} images`);
     console.log(
-      `🔗 URL:      https://environment-warrior.vercel.app/blog/${published.slug}`,
+      `🔗 URL:      https://environmentwarrior.in/blog/${published.slug}`,
     );
   } catch (err) {
     console.error("❌ Error:", err.message);

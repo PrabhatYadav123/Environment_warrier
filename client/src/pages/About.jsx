@@ -14,8 +14,8 @@ export default function About() {
         <meta property="og:type" content="website" />
         <meta property="og:title" content="About Us | Environment Warrior Group" />
         <meta property="og:description" content="A community-driven platform fighting for a cleaner and greener planet through awareness, action and accountability." />
-        <meta property="og:url" content="https://environment-warrior.vercel.app/about" />
-        <meta property="og:image" content="https://environment-warrior.vercel.app/og-image.jpg" />
+        <meta property="og:url" content="https://environmentwarrior.in/about" />
+        <meta property="og:image" content="https://environmentwarrior.in/og-image.jpg" />
 
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -23,7 +23,7 @@ export default function About() {
         <meta name="twitter:description" content="A community-driven platform fighting for a cleaner and greener planet." />
 
         {/* Canonical */}
-        <link rel="canonical" href="https://environment-warrior.vercel.app/about" />
+        <link rel="canonical" href="https://environmentwarrior.in/about" />
       </Helmet>
 
       {/* Hero Section */}

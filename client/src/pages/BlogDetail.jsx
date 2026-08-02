@@ -80,7 +80,7 @@ useEffect(() => {
     .filter(Boolean)
     .join(", ");
 
-  const canonical = `https://environment-warrior.vercel.app/blog/${slug}`;
+  const canonical = `https://environmentwarrior.in/blog/${slug}`;
 
   const structuredData = blog
     ? {
@@ -103,7 +103,7 @@ useEffect(() => {
           name: "Environment Warrior",
           logo: {
             "@type": "ImageObject",
-            url: "https://environment-warrior.vercel.app/logo512.png",
+            url: "https://environmentwarrior.in/logo512.png",
           },
         },
 

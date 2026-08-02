@@ -43,10 +43,10 @@ const formatDate = (date) =>
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Environment Warrior | Climate Stories & Community Action" />
         <meta property="og:description" content="Read climate stories, conservation guides and community action updates from Environment Warrior Group." />
-        <meta property="og:url" content="https://environment-warrior.vercel.app/" />
+        <meta property="og:url" content="https://environmentwarrior.in/" />
 <meta
   property="og:image"
-  content="https://environment-warrior.vercel.app/logo512.png"
+  content="https://environmentwarrior.in/logo512.png"
 />
 
         {/* Twitter */}
@@ -55,11 +55,11 @@ const formatDate = (date) =>
         <meta name="twitter:description" content="Read climate stories, conservation guides and community action updates from Environment Warrior Group." />
         <meta
   name="twitter:image"
-  content="https://environment-warrior.vercel.app/logo512.png"
+  content="https://environmentwarrior.in/logo512.png"
 />
 
         {/* Canonical */}
-        <link rel="canonical" href="https://environment-warrior.vercel.app/" />
+        <link rel="canonical" href="https://environmentwarrior.in/" />
       </Helmet>
 
      <section

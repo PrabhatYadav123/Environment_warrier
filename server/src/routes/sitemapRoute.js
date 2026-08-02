@@ -9,7 +9,7 @@ router.get("/sitemap.xml", async (req, res) => {
       .select("slug updatedAt")
       .sort({ updatedAt: -1 });
 
-    const baseUrl = "https://environment-warrior.vercel.app";
+    const baseUrl = "https://environmentwarrior.in/";
 
     const staticPages = [
       { url: "/",        changefreq: "daily",   priority: "1.0" },

@@ -30,7 +30,7 @@ export default function Blogs() {
 
   // ================= SEO =================
 
-  const canonical = `https://environment-warrior.vercel.app/blogs${
+  const canonical = `https://environmentwarrior.in/blogs${
     page > 1 ? `?page=${page}` : ""
   }`;
 
@@ -55,10 +55,10 @@ export default function Blogs() {
     publisher: {
       "@type": "Organization",
       name: "Environment Warrior",
-      url: "https://environment-warrior.vercel.app",
+      url: "https://environmentwarrior.in",
       logo: {
         "@type": "ImageObject",
-        url: "https://environment-warrior.vercel.app/logo.png",
+        url: "https://environmentwarrior.in/logo.png",
       },
     },
   };
@@ -93,7 +93,7 @@ export default function Blogs() {
         <meta property="og:url" content={canonical} />
         <meta
           property="og:image"
-          content="https://environment-warrior.vercel.app/og-image.jpg"
+          content="https://environmentwarrior.in/og-image.jpg"
         />
 
         {/* Twitter */}
@@ -102,21 +102,21 @@ export default function Blogs() {
         <meta name="twitter:description" content={metaDescription} />
         <meta
           name="twitter:image"
-          content="https://environment-warrior.vercel.app/og-image.jpg"
+          content="https://environmentwarrior.in/og-image.jpg"
         />
 
         {/* Pagination */}
         {page > 1 && (
           <link
             rel="prev"
-            href={`https://environment-warrior.vercel.app/blogs?page=${page - 1}`}
+            href={`blogs?page=${page - 1}`}
           />
         )}
 
         {page < pages && (
           <link
             rel="next"
-            href={`https://environment-warrior.vercel.app/blogs?page=${page + 1}`}
+            href={`https://environmentwarrior.in/blogs?page=${page + 1}`}
           />
         )}
 

@@ -32,8 +32,8 @@ export default function Contact() {
         <meta name="keywords" content="contact environment warrior, volunteer, partnership, environmental concerns India" />
         <meta property="og:title" content="Contact Us | Environment Warrior Group" />
         <meta property="og:description" content="Get in touch with Environment Warrior Group for volunteering, partnerships and environmental concerns." />
-        <meta property="og:url" content="https://environment-warrior.vercel.app/contact" />
-        <link rel="canonical" href="https://environment-warrior.vercel.app/contact" />
+        <meta property="og:url" content="https://environmentwarrior.in/contact" />
+        <link rel="canonical" href="https://environmentwarrior.in/contact" />
       </Helmet>
 
       {/* Hero */}

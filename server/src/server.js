@@ -20,9 +20,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = process.env.PORT || 5000;
 
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',')
+  : ["http://localhost:5173"];
+
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173", credentials: true }));
+
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
