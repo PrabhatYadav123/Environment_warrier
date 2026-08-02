@@ -227,6 +227,18 @@ async function uploadOneToCloudinary(url, index, maxRetries = 3) {
     try {
       const result = await cloudinary.uploader.upload(url, {
         folder: "environment-warrior/auto-generated",
+        // Instagram accepts JPEG images between 4:5 and 1.91:1. Creating a
+        // square JPEG here gives every carousel slide the same, safe format.
+        format: "jpg",
+        transformation: [
+          {
+            width: 1080,
+            height: 1080,
+            crop: "fill",
+            gravity: "auto",
+            quality: "auto",
+          },
+        ],
         timeout: 60000,
       });
       return {

@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "daily-blog.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --check daily-blog.js && node --check instagram.js",
+    "verify:instagram": "node verify-instagram.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
