@@ -30,21 +30,71 @@ async function fetchOrCreateCategory(categoryName) {
   return created.data._id;
 }
 
-async function fetchEnvironmentNews() {
+// ─────────────────────────────────────────────────────────────
+// NEW: fetch recent blog titles so we can avoid repeating topics
+// ─────────────────────────────────────────────────────────────
+async function fetchRecentBlogTitles(limit = 30) {
+  try {
+    const res = await axios.get(
+      `${BLOG_API_URL}/api/blogs?limit=${limit}&sort=-createdAt`,
+    );
+    // Confirmed actual API shape: { items: [...], total, page, pages }
+    const titles = (res.data.items || []).map((b) => b.title);
+    console.log(`📚 Fetched ${titles.length} recent titles for dedup context`);
+    return titles;
+  } catch (err) {
+    console.log(`⚠️ Couldn't fetch recent titles: ${err.message}`);
+    return [];
+  }
+}
+
+const TOPICS = [
+  "climate change India 2026",
+  "air pollution India",
+  "renewable energy solar India",
+  "deforestation wildlife India",
+  "water conservation India",
+  "plastic pollution ocean",
+  "flood drought India",
+  "electric vehicles India",
+  "monsoon agriculture India",
+  "coastal erosion sea level India",
+  "urban heat island cities India",
+  "biodiversity conservation India",
+  "e-waste recycling India",
+  "carbon credits climate policy India",
+  "sustainable agriculture organic farming India",
+  "wildlife corridor conservation India",
+  "river pollution India",
+  "Himalayan glacier melt India",
+  "green building sustainable architecture India",
+  "circular economy waste management India",
+];
+
+// ─────────────────────────────────────────────────────────────
+// NEW: avoid picking a topic whose keyword already appears in
+// recently published titles
+// ─────────────────────────────────────────────────────────────
+function pickTopic(recentTitles) {
+  const lowerTitles = recentTitles.map((t) => t.toLowerCase());
+
+  const availableTopics = TOPICS.filter((topic) => {
+    const keyword = topic.split(" ")[0].toLowerCase();
+    return !lowerTitles.some((title) => title.includes(keyword));
+  });
+
+  const pool = availableTopics.length > 0 ? availableTopics : TOPICS;
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  console.log(
+    `🎯 Topic pool size: ${pool.length}/${TOPICS.length} (filtered by recent titles)`,
+  );
+  return chosen;
+}
+
+async function fetchEnvironmentNews(recentTitles) {
   console.log("📰 Fetching environment news...");
 
-  const topics = [
-    "climate change India 2026",
-    "air pollution India",
-    "renewable energy solar India",
-    "deforestation wildlife India",
-    "water conservation India",
-    "plastic pollution ocean",
-    "flood drought India",
-    "electric vehicles India",
-  ];
-
-  const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+  const randomTopic = pickTopic(recentTitles);
   console.log(`Topic: ${randomTopic}`);
 
   try {
@@ -85,14 +135,14 @@ async function fetchEnvironmentNews() {
   ];
 }
 
-async function generateBlog(articles) {
+async function generateBlog(articles, recentTitles) {
   console.log("✍️ Generating blog with Gemini...");
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: {
-      temperature: 0.7,
+      temperature: 0.85, // bumped up slightly from 0.7 for more variety
       responseMimeType: "application/json",
       maxOutputTokens: 8192,
     },
@@ -101,6 +151,11 @@ async function generateBlog(articles) {
   const newsContext = articles
     .map((a, i) => `${i + 1}. ${a.title}\n   ${a.description}`)
     .join("\n\n");
+
+  const recentTitlesBlock =
+    recentTitles.length > 0
+      ? recentTitles.map((t, i) => `${i + 1}. ${t}`).join("\n")
+      : "None yet — this is one of the first articles.";
 
   const today = new Date().toLocaleDateString("en-IN", {
     day: "numeric",
@@ -116,12 +171,23 @@ Today is ${today}.
 NEWS CONTEXT:
 ${newsContext}
 
-Write a professional 1200-1500 word environmental blog article about the most important topic from above.
+RECENTLY PUBLISHED ARTICLES ON THIS SITE (do not repeat these topics, angles, or similar titles):
+${recentTitlesBlock}
+
+Write a professional 1200-1500 word environmental blog article about the most important topic from the news context above.
+
+UNIQUENESS REQUIREMENTS (critical — read the recent titles list above carefully before writing):
+- Do NOT reuse overused phrasing patterns such as "silent killer", "climate inferno", "silent scourge", "ticking time bomb", "silent emergency", "on the brink" — pick fresh, specific, non-generic language instead
+- Do NOT restate a broad topic generically (e.g. not "India's water crisis" as a whole) — instead pick ONE specific, narrow angle: a particular region/state, a specific policy or scheme, a named technology, a specific community or stakeholder story, or a specific recent data point/event
+- If a similar topic already appears in the recently published list above, either choose a different story from the news context entirely, or take a clearly distinct angle (different geography, different affected group, different time frame, different cause-effect chain, different proposed solution)
+- Include at least 2 concrete, specific details — a named place, a specific statistic, a named policy/scheme, or a named organization — rather than vague generalities
+- Vary structure and opening style between articles: sometimes open with a specific incident or anecdote, sometimes with a surprising statistic, sometimes with a stakeholder's direct situation — avoid defaulting to the same "intro paragraph → problem → solution → conclusion" template every time
+- Title must be substantively different in wording and framing from every title in the recent list above, not just a synonym swap
 
 CRITICAL: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. Start with { and end with }.
 
 {
-  "title": "50-65 character SEO title",
+  "title": "50-65 character SEO title — must be clearly distinct from the recent titles listed above",
   "subtitle": "80-120 character subtitle",
   "excerpt": "150-160 character meta description",
   "content": "Full 2000 word markdown article with ## headings",
@@ -168,6 +234,24 @@ IMPORTANT JSON RULES:
 
       if (!blog.title || !blog.content || !blog.excerpt) {
         throw new Error("Missing required fields");
+      }
+
+      // NEW: soft guard — reject and retry if title is near-identical to a recent one
+      const titleLower = blog.title.toLowerCase();
+      const isDuplicateTitle = recentTitles.some((t) => {
+        const existing = t.toLowerCase();
+        // crude similarity check: shared 4+ word overlap
+        const wordsA = new Set(titleLower.split(/\s+/));
+        const wordsB = new Set(existing.split(/\s+/));
+        const overlap = [...wordsA].filter((w) => wordsB.has(w)).length;
+        return overlap >= 4;
+      });
+
+      if (isDuplicateTitle && attempts < maxAttempts) {
+        console.warn(
+          `⚠️ Title too similar to a recent post ("${blog.title}"), regenerating...`,
+        );
+        continue;
       }
 
       console.log(`✅ Blog: "${blog.title}"`);
@@ -333,8 +417,9 @@ async function main() {
   console.log("==========================================");
 
   try {
-    const articles = await fetchEnvironmentNews();
-    const blogData = await generateBlog(articles);
+    const recentTitles = await fetchRecentBlogTitles(30);
+    const articles = await fetchEnvironmentNews(recentTitles);
+    const blogData = await generateBlog(articles, recentTitles);
     const imageUrls = await generateMultipleImages(blogData);
     const uploadedImages = await uploadAllToCloudinary(imageUrls);
 
