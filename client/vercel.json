@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "environment-warrior.vercel.app"
+        }
+      ],
+      "destination": "https://environmentwarrior.in/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/sitemap.xml",
