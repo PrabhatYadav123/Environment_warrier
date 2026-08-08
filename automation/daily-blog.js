@@ -30,15 +30,11 @@ async function fetchOrCreateCategory(categoryName) {
   return created.data._id;
 }
 
-// ─────────────────────────────────────────────────────────────
-// NEW: fetch recent blog titles so we can avoid repeating topics
-// ─────────────────────────────────────────────────────────────
 async function fetchRecentBlogTitles(limit = 30) {
   try {
     const res = await axios.get(
       `${BLOG_API_URL}/api/blogs?limit=${limit}&sort=-createdAt`,
     );
-    // Confirmed actual API shape: { items: [...], total, page, pages }
     const titles = (res.data.items || []).map((b) => b.title);
     console.log(`📚 Fetched ${titles.length} recent titles for dedup context`);
     return titles;
@@ -48,7 +44,10 @@ async function fetchRecentBlogTitles(limit = 30) {
   }
 }
 
-const TOPICS = [
+// ─────────────────────────────────────────────────────────────
+// Original broad topics — kept as-is.
+// ─────────────────────────────────────────────────────────────
+const BASE_TOPICS = [
   "climate change India 2026",
   "air pollution India",
   "renewable energy solar India",
@@ -72,15 +71,82 @@ const TOPICS = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-// NEW: avoid picking a topic whose keyword already appears in
+// NEW: state × issue combinations — the actual fix for topic
+// exhaustion. Instead of 20 generic subjects, this generates
+// (states × issue types) distinct, narrow, geography-specific
+// angles: "air pollution Bihar", "river pollution Karnataka",
+// "groundwater depletion Punjab", etc.
+// ─────────────────────────────────────────────────────────────
+const STATES = [
+  "Bihar",
+  "Uttar Pradesh",
+  "Karnataka",
+  "Maharashtra",
+  "Rajasthan",
+  "Tamil Nadu",
+  "West Bengal",
+  "Gujarat",
+  "Kerala",
+  "Punjab",
+  "Madhya Pradesh",
+  "Odisha",
+  "Assam",
+  "Telangana",
+  "Andhra Pradesh",
+  "Haryana",
+  "Jharkhand",
+  "Chhattisgarh",
+  "Uttarakhand",
+  "Himachal Pradesh",
+];
+
+const ISSUE_TYPES = [
+  "air pollution",
+  "river pollution",
+  "groundwater depletion",
+  "plastic waste",
+  "deforestation",
+  "industrial pollution",
+  "e-waste",
+  "urban flooding",
+  "crop stubble burning",
+  "wetland loss",
+  "solid waste management",
+  "coastal erosion",
+];
+
+function buildStateIssueTopics() {
+  const combos = [];
+  for (const issue of ISSUE_TYPES) {
+    for (const state of STATES) {
+      combos.push(`${issue} ${state} India`);
+    }
+  }
+  return combos;
+}
+
+const TOPICS = [...BASE_TOPICS, ...buildStateIssueTopics()];
+
+// ─────────────────────────────────────────────────────────────
+// avoid picking a topic whose keyword already appears in
 // recently published titles
 // ─────────────────────────────────────────────────────────────
 function pickTopic(recentTitles) {
   const lowerTitles = recentTitles.map((t) => t.toLowerCase());
 
   const availableTopics = TOPICS.filter((topic) => {
-    const keyword = topic.split(" ")[0].toLowerCase();
-    return !lowerTitles.some((title) => title.includes(keyword));
+    // Match on the topic's distinguishing words (issue + state), not
+    // just the first word — state-issue combos start with the issue
+    // type ("air pollution Bihar" vs "air pollution UP"), so we don't
+    // want "air pollution" alone to disqualify every state variant
+    // just because one state was covered recently.
+    const words = topic.toLowerCase().split(" ").filter((w) => w !== "india");
+    return !lowerTitles.some((title) => {
+      const overlap = words.filter((w) => title.includes(w)).length;
+      // Require most of the distinguishing words to match (issue AND
+      // state) before treating the topic as "already covered."
+      return overlap >= Math.max(2, Math.ceil(words.length * 0.6));
+    });
   });
 
   const pool = availableTopics.length > 0 ? availableTopics : TOPICS;
@@ -142,7 +208,7 @@ async function generateBlog(articles, recentTitles) {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: {
-      temperature: 0.85, // bumped up slightly from 0.7 for more variety
+      temperature: 0.85,
       responseMimeType: "application/json",
       maxOutputTokens: 8192,
     },
@@ -236,11 +302,9 @@ IMPORTANT JSON RULES:
         throw new Error("Missing required fields");
       }
 
-      // NEW: soft guard — reject and retry if title is near-identical to a recent one
       const titleLower = blog.title.toLowerCase();
       const isDuplicateTitle = recentTitles.some((t) => {
         const existing = t.toLowerCase();
-        // crude similarity check: shared 4+ word overlap
         const wordsA = new Set(titleLower.split(/\s+/));
         const wordsB = new Set(existing.split(/\s+/));
         const overlap = [...wordsA].filter((w) => wordsB.has(w)).length;
@@ -266,8 +330,6 @@ IMPORTANT JSON RULES:
   }
 }
 
-// Set this to a permanent, already-hosted cover image (e.g. one you upload once
-// to Cloudinary yourself). Used only if both AI generation and Unsplash fail.
 const DEFAULT_FALLBACK_IMAGE_URL =
   process.env.FALLBACK_IMAGE_URL ||
   "https://res.cloudinary.com/REPLACE_ME/image/upload/environment-warrior-default-cover.jpg";
@@ -292,9 +354,6 @@ async function generateMultipleImages(blog) {
     const encoded = encodeURIComponent(
       `${prompt}, professional photography, 4k, high quality, realistic`,
     );
-    // pollinations.ai requires seed <= 2147483647 (signed 32-bit int).
-    // Date.now() alone is a 13-digit ms timestamp and exceeds this, so we
-    // fold it down into range instead of using it raw.
     const seed = (Date.now() + i * 1000) % 2147483647;
     return {
       primaryUrl: `https://image.pollinations.ai/prompt/${encoded}?width=1200&height=630&nolog=true&seed=${seed}`,
@@ -311,8 +370,6 @@ async function uploadOneToCloudinary(url, index, maxRetries = 3) {
     try {
       const result = await cloudinary.uploader.upload(url, {
         folder: "environment-warrior/auto-generated",
-        // Instagram accepts JPEG images between 4:5 and 1.91:1. Creating a
-        // square JPEG here gives every carousel slide the same, safe format.
         format: "jpg",
         transformation: [
           {
@@ -337,7 +394,6 @@ async function uploadOneToCloudinary(url, index, maxRetries = 3) {
         `  ❌ Image ${index + 1} attempt ${attempt}/${maxRetries} failed: ${err.message}`,
       );
       if (attempt === maxRetries) return null;
-      // pollinations.ai is a free, unauthenticated endpoint — back off and retry
       await new Promise((r) => setTimeout(r, 3000 * attempt));
     }
   }
@@ -345,17 +401,14 @@ async function uploadOneToCloudinary(url, index, maxRetries = 3) {
 }
 
 async function uploadWithFallback(image, index) {
-  // Tier 1: AI-generated image via pollinations.ai (retried)
   let result = await uploadOneToCloudinary(image.primaryUrl, index);
   if (result) return result;
 
-  // Tier 2: Unsplash's free source API, keyed off the blog's own tags
   console.warn(`  ⚠️ Image ${index + 1}: falling back to Unsplash (keyword: "${image.keyword}")`);
   const unsplashUrl = `https://source.unsplash.com/1200x630/?${encodeURIComponent(image.keyword)}`;
   result = await uploadOneToCloudinary(unsplashUrl, index, 2);
   if (result) return result;
 
-  // Tier 3: static default cover — always resolves, guarantees every blog has an image
   console.warn(`  ⚠️ Image ${index + 1}: falling back to static default cover image`);
   return {
     url: DEFAULT_FALLBACK_IMAGE_URL,
@@ -411,7 +464,6 @@ async function publishBlog(blogData, featuredImage, galleryImages) {
   return res.data;
 }
 
-// ✅ Main — Instagram integration sahi jagah pe
 async function main() {
   console.log("🌍 Environment Warrior — Auto Blog Generator");
   console.log("==========================================");
@@ -423,8 +475,6 @@ async function main() {
     const imageUrls = await generateMultipleImages(blogData);
     const uploadedImages = await uploadAllToCloudinary(imageUrls);
 
-    // Defensive check only — uploadAllToCloudinary's fallback chain means this
-    // should never actually be empty, but we don't crash if it somehow is.
     if (uploadedImages.length === 0) {
       console.warn(
         "⚠️ No images resolved at all — publishing blog without images and skipping Instagram post.",
@@ -446,13 +496,8 @@ async function main() {
       return;
     }
 
-    // ✅ Instagram post — main() ke andar, publishBlog ke baad
-    // (postToInstagram, buildCaption already imported at top of file)
-
-    // main() mein:
     const blogUrl = `https://environmentwarrior.in/blog/${published.slug}`;
 
-    // ✅ SEO optimized caption
     const caption = buildCaption(
       published.title,
       published.excerpt,
@@ -460,14 +505,13 @@ async function main() {
       published.tags || [],
     );
 
-    // ✅ Alt text for SEO
     const altText = `${published.title} - Environment Warrior India`;
 
     await postToInstagram(
-      featuredImage.url, // Featured image
-      caption, // Caption
-      altText, // Alt text
-      galleryImages, // Gallery images array
+      featuredImage.url,
+      caption,
+      altText,
+      galleryImages,
     );
     console.log("✅ Instagram post done!");
     console.log("");
