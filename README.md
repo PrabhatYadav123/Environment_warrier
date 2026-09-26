@@ -124,3 +124,164 @@ VITE_API_URL=https://your-backend-url.com/api
 npm run build
 firebase deploy
 ```
+
+
+const userSchema=new mongoose.Schema({
+    name:String,
+    email:String,
+    password:String
+})
+
+const User= mongoose.model("User",userSchema);
+
+export default User;
+
+In route
+
+app.post("/api/users",userController);
+
+const userController=async(req,res)=>{
+    try {
+  const {email}=req.body
+    const isEmailExits=await User.findOne({email});
+    if(isEmailExits){
+        res.status(409).json({message:"Email already exists})
+    }
+    const user=await User.create(req.body);
+
+    res.status(201).json({
+        success:true,
+        data:user
+    })
+    }
+    catch (err){
+        return res.status(500).json({
+            success:false,
+            message:err.message
+        })
+    }
+  
+}
+
+// POST /api/login
+
+Requirements:
+
+Get email and password from req.body.
+Find the user by email.
+If user doesn't exist → 401.
+Compare the incoming password with the stored password using bcrypt.
+If password doesn't match → 401.
+If correct → generate a JWT.
+Return the token in the response.
+
+Don't worry about making it production-perfect.
+
+Write the schema/model assumptions + route + controller. I'll review it like an interviewer.
+
+Schema
+
+app.post("/api/login", loginController)
+
+const loginController=async(req,res)=>{
+    try{
+
+const {email,password}=req.body;
+const user=await User.findOne({email});
+const isValidPasswor=await bycrypt.compare(password,user.password)
+if(!user || !isValidPasswor){
+   return res.status(401).json({
+        message:"Invalid Credential"
+    })
+}
+
+const token=jwt.sign({
+    userId:user._id,
+    role:user.role
+},
+process.env.JWT_SECRET,
+{expiresIn:"1d"}
+)
+
+res.json({
+success:true,
+email:req.email,
+name:req.name:
+token
+})
+}catch (err){
+  return  res.status(500).json({
+        success:false,
+        message:err.message
+    })
+}
+
+}
+
+
+
+Implementation 2 — Protected API 🔥
+
+Now we'll use the JWT you just generated.
+
+Create:
+
+GET /api/profile
+
+Requirements:
+
+React sends:
+
+Authorization: Bearer <token>
+Middleware extracts the token.
+Verify token using jwt.verify().
+Put decoded information into req.user.
+Call next().
+Controller returns the logged-in user's information.
+
+Write the middleware + route + controller yourself.
+
+This one is very important because it connects JWT → middleware → req.user → controller, which is something you've already encountered in your project
+
+
+const userSchema=new mongoose.Schema({
+    name:{type:String,trim:true,required:true},
+    email:{type:String,trim:true,required:true,unique:true}
+    password:{type:String,required:true,minlength:8}
+})
+
+const User=mongoose.model("User",userSchema);
+
+export default User;
+
+const app = express();
+
+app.get("/api/profile",authMiddleWare,profileController)
+
+
+const authMiddleWare=async(req,res,next)=>{
+const token=req.headers.authorization;
+if(!token){
+    res.status(401);
+    throw new Error("Invalid Token)
+}
+
+const decoded=jwt.verify(token,process.env.JWT_SECRET);
+req.user=await User.findById({decoded.id});
+
+if(!req.user){
+    res.status(403);
+    throw new Error("User is not authorized)
+}
+next();
+}
+
+const profileController=async(req,res)=>{
+    const {email}=req.email
+    const user=await User.findOne({email});
+
+    res.json({
+        data:user
+    })
+
+}

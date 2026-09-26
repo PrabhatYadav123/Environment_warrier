@@ -23,6 +23,15 @@ const Gallery = lazy(() => import("./pages/Gallery.jsx"));
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Videos = lazy(() => import("./pages/Videos.jsx"));
 
+function NotFound() {
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-12">
+      <h1 className="text-3xl font-black">Page not found</h1>
+      <p className="mt-3 text-ink/70">The page you requested does not exist.</p>
+    </main>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
   return token ? children : <Navigate to="/admin/login" replace />;
@@ -69,6 +78,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="profile" element={<Page component={Profile} />} />
               <Route path="contacts" element={<Page component={Contacts} />} />
             </Route>
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

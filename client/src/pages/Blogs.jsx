@@ -109,7 +109,7 @@ export default function Blogs() {
         {page > 1 && (
           <link
             rel="prev"
-            href={`blogs?page=${page - 1}`}
+            href={`https://environmentwarrior.in/blogs?page=${page - 1}`}
           />
         )}
 
