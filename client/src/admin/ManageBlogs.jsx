@@ -6,7 +6,7 @@ import {
   Eye,
   FileText,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../services/api";
 import { formatDate } from "../utils/format";
@@ -15,6 +15,10 @@ export default function ManageBlogs() {
   const location = useLocation();
 
   const [blogs, setBlogs] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
 
@@ -31,15 +35,29 @@ export default function ManageBlogs() {
 
       const status = params.get("status");
 
-      let url = "/blogs?includeDrafts=true&limit=100";
+      const query = new URLSearchParams({
+        includeDrafts: "true",
+        limit: "50",
+        page: String(page)
+      });
 
       if (status) {
-        url += `&status=${status}`;
+        query.set("status", status);
       }
 
-      const { data } = await api.get(url);
+      if (search.trim()) {
+        query.set("search", search.trim());
+      }
+
+      const [{ data }, { data: analyticsData }] = await Promise.all([
+        api.get(`/blogs?${query}`),
+        api.get("/blogs/analytics/summary")
+      ]);
 
       setBlogs(data.items || []);
+      setTotal(data.total || 0);
+      setPages(data.pages || 1);
+      setStats(analyticsData);
     } catch (err) {
       setError("Unable to load blogs.");
     } finally {
@@ -49,6 +67,10 @@ export default function ManageBlogs() {
 
   useEffect(() => {
     load();
+  }, [location.search, page, search]);
+
+  useEffect(() => {
+    setPage(1);
   }, [location.search]);
 
   async function remove(id) {
@@ -71,19 +93,7 @@ export default function ManageBlogs() {
     }
   }
 
-  const filteredBlogs = useMemo(() => {
-    return blogs.filter((blog) =>
-      blog.title.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [blogs, search]);
-
-  const publishedCount = blogs.filter(
-    (blog) => blog.status === "published"
-  ).length;
-
-  const draftCount = blogs.filter(
-    (blog) => blog.status === "draft"
-  ).length;
+  const filteredBlogs = blogs;
 
   if (loading) {
     return (
@@ -124,20 +134,20 @@ export default function ManageBlogs() {
     <div className="grid gap-4 md:grid-cols-3">
       <div className="rounded-md bg-white p-5 shadow-soft">
         <p className="text-sm text-gray-500">Total Blogs</p>
-        <h2 className="mt-2 text-3xl font-black">{blogs.length}</h2>
+        <h2 className="mt-2 text-3xl font-black">{stats?.totalBlogs ?? total}</h2>
       </div>
 
       <div className="rounded-md bg-white p-5 shadow-soft">
         <p className="text-sm text-gray-500">Published</p>
         <h2 className="mt-2 text-3xl font-black text-green-600">
-          {publishedCount}
+          {stats?.publishedBlogs ?? 0}
         </h2>
       </div>
 
       <div className="rounded-md bg-white p-5 shadow-soft">
         <p className="text-sm text-gray-500">Drafts</p>
         <h2 className="mt-2 text-3xl font-black text-yellow-600">
-          {draftCount}
+          {stats?.draftBlogs ?? 0}
         </h2>
       </div>
     </div>
@@ -166,7 +176,10 @@ export default function ManageBlogs() {
         className="field pl-10"
         placeholder="Search blogs..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
       />
     </div>
 
@@ -286,6 +299,30 @@ export default function ManageBlogs() {
             ))}
           </tbody>
         </table>
+      </div>
+    )}
+
+    {pages > 1 && (
+      <div className="flex items-center justify-center gap-4">
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={page === 1}
+          onClick={() => setPage((current) => current - 1)}
+        >
+          Previous
+        </button>
+        <span className="text-sm font-semibold text-gray-600">
+          Page {page} of {pages} · {total} blogs
+        </span>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={page === pages}
+          onClick={() => setPage((current) => current + 1)}
+        >
+          Next
+        </button>
       </div>
     )}
     </section>
