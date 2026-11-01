@@ -13,6 +13,7 @@ import blogRoutes from "./routes/blogRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import sitemapRoute from "./routes/sitemapRoute.js"; // ← Add
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/", sitemapRoute);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/contact", contactRoutes);

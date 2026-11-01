@@ -31,3 +31,10 @@ export const engagementLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 30
 });
+
+export const chatLimiter = rateLimit({
+  ...common,
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  message: { message: "You’ve reached the chat limit. Please try again later." }
+});

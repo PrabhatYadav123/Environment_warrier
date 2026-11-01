@@ -285,3 +285,26 @@ const profileController=async(req,res)=>{
     })
 
 }
+## RAG blog assistant
+
+The public site includes an “Ask our blogs” chat panel. It retrieves relevant passages from published blogs and answers from those passages, with links back to the matching articles.
+
+### Configuration
+
+Set `GEMINI_API_KEY` in `server/.env` and in the server deployment environment. Optional model overrides are `GEMINI_EMBEDDING_MODEL` (defaults to `gemini-embedding-001`) and `GEMINI_CHAT_MODEL` (defaults to `gemini-2.5-flash`).
+
+Published blog content, including its topic/category and tags, is split into overlapping chunks, embedded with Gemini, and stored with the numeric vectors in MongoDB's `blogchunks` collection. New and edited published blogs are indexed when saved. Retrieval embeds each question, compares it with stored vectors using cosine similarity, and gives the best passages to Gemini to draft an answer.
+
+### Index existing blogs
+
+Log in as an admin, then call the protected indexing endpoint with the token from the admin login:
+
+```sh
+curl -X POST "$API_URL/api/chat/index" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+The response reports the number indexed and any blog failures. Check progress or index state with `GET /api/chat/index` using the same authorization header. Re-running the POST resumes blogs that are still missing from the index.
+
+The public chat endpoint is `POST /api/chat` with JSON `{ "question": "How can communities reduce plastic waste?" }`. It returns an answer and related published blog slugs. Requests are rate limited.
+

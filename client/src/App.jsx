@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import Footer from "./components/Footer.jsx";
 import Navbar from "./components/Navbar.jsx";
+import RagChat from "./components/RagChat.jsx";
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
         <Outlet />
       </main>
       <Footer />
+      <RagChat />
     </div>
   );
 }

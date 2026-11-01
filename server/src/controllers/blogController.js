@@ -2,6 +2,15 @@ import asyncHandler from "express-async-handler";
 import slugify from "slugify";
 import Blog from "../models/Blog.js";
 import { destroyMedia, resolveBlogMedia, toMedia } from "../utils/media.js";
+import { indexBlog, removeBlogFromIndex } from "../services/rag.js";
+
+async function refreshBlogIndex(blog) {
+  try {
+    await indexBlog(blog);
+  } catch (error) {
+    console.error(`Could not index blog "${blog.title}": ${error.message}`);
+  }
+}
 
 const populate = [
   { path: "author", select: "name profileImage" },
@@ -183,6 +192,7 @@ export const createBlog = asyncHandler(async (req, res) => {
     ...(await getBlogPayload(req)),
     author: req.user._id
   });
+  if (blog.status === "published") await refreshBlogIndex(blog);
   res.status(201).json(resolveBlogMedia(await blog.populate(populate), req));
 });
 
@@ -219,6 +229,7 @@ export const updateBlog = asyncHandler(async (req, res) => {
 
   Object.assign(blog, payload);
   await blog.save();
+  await refreshBlogIndex(blog);
   res.json(resolveBlogMedia(await blog.populate(populate), req));
 });
 
@@ -237,6 +248,7 @@ export const deleteBlog = asyncHandler(async (req, res) => {
   ]);
 
   await blog.deleteOne();
+  await removeBlogFromIndex(blog._id);
   res.json({ message: "Blog deleted" });
 });
 

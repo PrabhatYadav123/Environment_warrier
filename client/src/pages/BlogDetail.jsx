@@ -250,10 +250,7 @@ useEffect(() => {
       )}
       <div className="mx-auto grid max-w-4xl gap-8 px-4 py-10">
         <hr className="my-10 border-gray-200" />
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeRaw, rehypeSanitize]}
-          className="prose prose-lg lg:prose-xl max-w-none
+        <div className="prose prose-lg lg:prose-xl max-w-none
     prose-headings:font-bold
     prose-headings:text-gray-900
     prose-p:text-gray-700
@@ -271,10 +268,14 @@ useEffect(() => {
     prose-table:border
     prose-th:border
     prose-td:border
-    prose-code:text-red-600"
-        >
-          {blog.content}
-        </ReactMarkdown>
+    prose-code:text-red-600">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+          >
+            {blog.content}
+          </ReactMarkdown>
+        </div>
         {blog.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {blog.tags.map((tag) => (
